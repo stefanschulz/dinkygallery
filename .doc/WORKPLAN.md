@@ -312,6 +312,19 @@ funktionsfähig) → 9 → 10 → 11 → 12.
 - **Autor-Metadaten:** The Loom / Stefan Schulz, `schulz@the-loom.de`, `https://www.the-loom.de`.
 - **Test-Umgebung:** eigener `.docker/`-Stack analog DinkyTags.
 
+## Während Slice 2 gelernt
+
+- **Asset-Ablage:** Joomlas relativer Asset-Resolver (`HTMLHelper::includeRelativeFiles`)
+  findet `uri: "plg_content_dinkygallery/x.css"` **nur** unter
+  `media/plg_content_dinkygallery/css/x.css` (bzw. `js/` für Skripte) — flache
+  Ablage wird still verworfen. Dateien liegen jetzt in `css/` + `js/`.
+- **`joomla.asset.json`** von Erweiterungen wird **nicht** automatisch geladen:
+  `->getRegistry()->addExtensionRegistryFile('plg_content_dinkygallery')` vor
+  `useStyle()`/`useScript()` nötig.
+- **Feeds:** `com_content` baut RSS-Items direkt aus introtext/fulltext, **ohne**
+  `onContentPrepare` — `{gallery}` bleibt im Feed roh. Kein Hook dafür in v1;
+  als bekannte Einschränkung dokumentiert. Betrifft die empulsiv-Artikelseiten nicht.
+
 ## Offene Punkte
 
 1. **Empulsiv-Migration (Spec §11)** ist **nicht Teil dieses Repos** — nur Abnahme:

@@ -6,6 +6,34 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Slice 2 — server-side shortcode processing:
+  - `Helper\Shortcode`: finds `{gallery ...}` (bare and attribute forms, the legacy gallery plugin
+    grammar, leading bare token accepted as folder), best-effort skip of tags
+    inside an unclosed `<code>` / `<pre>`.
+  - `Helper\Folder`: folder-name validation (rejects `..`, leading slash,
+    non-existent target, or a real path escaping `base_directory`), natural
+    filename sort asc/desc, per-request `getimagesize()` cache, root-relative
+    URLs with per-segment encoding.
+  - `Helper\Render`: the `.dg` scroll-snap carousel markup (stable class /
+    `data-*` contract) and the `.dg-plain` no-JS / non-HTML fallback list.
+  - `DinkyGallery::onContentPrepare` wired: context guard
+    (`com_content.article|category|featured|archive|feed`), Smart Search indexer
+    strips the tags, per-tag resolve → list → render with byte-offset-safe
+    reverse replacement, `debug=1` decision comment, one CSS + one module script
+    registered via `WebAssetManager` only when a carousel was emitted.
+  - ARIA label strings (`_ARIA_*`) in en-GB + de-DE.
+- Media assets moved to the `css/` + `js/` subfolders Joomla's relative asset
+  resolver requires (`media/plg_content_dinkygallery/{css,js}/`); manifest
+  `<media>` updated.
+
+### Known limitations
+- com_content builds RSS feed items straight from introtext/fulltext without
+  firing `onContentPrepare`, so `{gallery ...}` cannot be replaced in feeds
+  through this event. The `com_content.feed` context is handled if ever invoked,
+  but core does not invoke it. Article / category / featured / archive views
+  (all of the empulsiv target) are unaffected.
+
+### Added
 - Repository skeleton (Slice 1 — installable but inert):
   - Extension manifest `dinkygallery.xml` (`type=plugin`, `group=content`,
     `method=upgrade`, `<namespace path="src">`, `<media>` for the CSS/JS/asset
