@@ -23,7 +23,7 @@ Sprachdatei-Disziplin, `.docker/`-Teststack, Doku im Stil von
 | Params | **inline im `dinkygallery.xml`** (`<config><fields name="params">`), kein separates `config.xml` | analog DinkyTags |
 | Update-Server | `https://www.the-loom.de/extensions/dinkygallery/update.xml` | Muster aus DinkyTags |
 | Repo-Layout | Plugin-Dateien im Repo-**Root**; die vorhandene `.gitignore` ist eine Joomla-Root-Ignore-Liste → Entwicklung in echter Joomla-Installation, nur Plugin-Dateien getrackt | wie DinkyTags |
-| Lightbox-Optik (Anf. 9) | **„überall abgedunkelt"** — ein Backdrop-Layer über dem ganzen Viewport, transparenter Frame zeigt die *abgedunkelte* Seite durch | Spec §5.1 Design-Check, entschieden 2026-08-30 |
+| Lightbox-Optik (Anf. 9) | **„nur die Lightbox abgedunkelt"** — die Dimmung sitzt auf dem Frame (`background: rgba(0,0,0,var(--dg-backdrop))`), der Backdrop ist nur transparenter Klickfänger. Ist der Frame kleiner als der Viewport, bleibt die Seite ringsum klar; bei `size=100` deckt der Frame alles → wie vorher. Klick außerhalb schließt (`cursor: zoom-out`). | Spec §5.1 Design-Check. Erst „ganzer Viewport" (2026-08-30), auf Nutzerwunsch umgekehrt (2026-08-30, nach Slice 4) |
 | `{gallery}` in `<code>`/`<pre>` | Best-Effort-Skip wird **umgesetzt** (nicht auf v1.1 verschoben) | Spec §3 erlaubt Verschiebung, aber der Aufwand ist gering; entschieden 2026-08-30 |
 | `base_directory`-Feldtyp | **`type="text"`** mit `hint="images"`, Default `images` | Joomla hat keinen `folder`-Feldtyp (nur `folderlist`, das rekursiv die *gesamte* Installation listet bzw. bei `directory="images"` die Pfad-Semantik bricht). Einmalige Einstellung, Validierung in `Helper/Folder`. Entschieden 2026-08-30 |
 
@@ -309,7 +309,9 @@ funktionsfähig) → 9 → 10 → 11 → 12.
 - **Lizenz:** GPLv3-or-later (Header + `LICENSE`/`LICENSE.txt`).
 - **`base_directory`-Feldtyp:** `type="text"` (Joomla hat keinen `folder`-Typ; `folderlist`
   passt semantisch nicht). Default `images`, Empulsiv `images/stories`.
-- **Lightbox-Optik:** ganzer Viewport abgedunkelt (ein Backdrop-Layer, transparenter Frame).
+- **Lightbox-Optik:** nur der Frame ist abgedunkelt (Dimm-Hintergrund auf dem Frame,
+  Backdrop transparenter Klickfänger); Seite ringsum klar, Klick außerhalb schließt.
+  (Erst „ganzer Viewport", auf Nutzerwunsch nach Slice 4 umgekehrt.)
 - **`<code>`/`<pre>`-Skip:** wird umgesetzt (Best Effort).
 - **Autor-Metadaten:** The Loom / Stefan Schulz, `schulz@the-loom.de`, `https://www.the-loom.de`.
 - **Test-Umgebung:** eigener `.docker/`-Stack analog DinkyTags.

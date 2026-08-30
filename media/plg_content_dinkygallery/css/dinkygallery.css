@@ -210,11 +210,14 @@
     opacity: 1;
 }
 
-/* The one and only dimmed layer: the whole viewport, page shows through darkened. */
+/* Full-viewport click catcher, but not painted: only the frame is dimmed, so a
+   lightbox smaller than the viewport leaves the page around it clear. A click
+   out here (outside the frame) closes. */
 .dg-lb__backdrop {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, var(--dg-backdrop, 0.6));
+    background: transparent;
+    cursor: zoom-out;
 }
 
 .dg-lb__frame {
@@ -223,7 +226,10 @@
     height: calc(var(--dg-size) * 1vh);
     max-width: 100vw;
     max-height: 100vh;
-    background: transparent; /* no letterbox bars — requirement 9 */
+    /* The dim lives on the frame itself: a translucent dark mat, so empty frame
+       area shows the page faintly through it rather than a solid black bar, and
+       at size 100 the whole viewport is covered as before. */
+    background: rgba(0, 0, 0, var(--dg-backdrop, 0.6));
 }
 
 .dg-lb__img {
@@ -258,6 +264,9 @@
 
 .dg-lb__zone--mid {
     left: 33.333%;
+    /* !important: the site template's [type="button"]:not(:disabled){cursor:pointer}
+       loads after this file at equal specificity and would otherwise win. */
+    cursor: zoom-out !important; /* the middle third closes when middle=close */
 }
 
 .dg-lb__zone--next {
