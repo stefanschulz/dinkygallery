@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" group="content" method="upgrade">
+    <name>plg_content_dinkygallery</name>
+    <author>The Loom / Stefan Schulz</author>
+    <creationDate>2026-08</creationDate>
+    <copyright>Copyright (C) 2026 The Loom / Stefan Schulz. All rights reserved.</copyright>
+    <license>GNU General Public License version 3 or later; see LICENSE.txt</license>
+    <authorEmail>schulz@the-loom.de</authorEmail>
+    <authorUrl>https://www.the-loom.de</authorUrl>
+    <version>1.0.0</version>
+    <description>PLG_CONTENT_DINKYGALLERY_XML_DESCRIPTION</description>
+
+    <namespace path="src">TheLoom\Plugin\Content\DinkyGallery</namespace>
+
+    <files>
+        <folder plugin="dinkygallery">services</folder>
+        <folder>src</folder>
+        <folder>language</folder>
+        <filename>dinkygallery.xml</filename>
+    </files>
+
+    <media destination="plg_content_dinkygallery" folder="media/plg_content_dinkygallery">
+        <filename>joomla.asset.json</filename>
+        <filename>dinkygallery.css</filename>
+        <filename>dinkygallery.js</filename>
+    </media>
+
+    <config>
+        <fields name="params">
+            <fieldset name="basic">
+
+                <field name="base_directory"
+                       type="text"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_BASE_DIRECTORY_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_BASE_DIRECTORY_DESC"
+                       hint="images"
+                       default="images"/>
+
+                <field name="image_extensions"
+                       type="text"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_IMAGE_EXTENSIONS_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_IMAGE_EXTENSIONS_DESC"
+                       default="jpg,jpeg,png,webp,gif,avif"/>
+
+                <field name="sort_order"
+                       type="list"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_SORT_ORDER_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_SORT_ORDER_DESC"
+                       default="asc">
+                    <option value="asc">PLG_CONTENT_DINKYGALLERY_PARAM_SORT_ORDER_OPT_ASC</option>
+                    <option value="desc">PLG_CONTENT_DINKYGALLERY_PARAM_SORT_ORDER_OPT_DESC</option>
+                </field>
+
+                <field name="visible_cards"
+                       type="number"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_VISIBLE_CARDS_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_VISIBLE_CARDS_DESC"
+                       min="1"
+                       max="12"
+                       default="3"/>
+
+                <field name="card_aspect"
+                       type="list"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_CARD_ASPECT_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_CARD_ASPECT_DESC"
+                       default="4/3">
+                    <option value="4/3">4 : 3</option>
+                    <option value="3/2">3 : 2</option>
+                    <option value="1/1">1 : 1</option>
+                    <option value="16/9">16 : 9</option>
+                </field>
+
+                <field name="card_min"
+                       type="text"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_CARD_MIN_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_CARD_MIN_DESC"
+                       default="13rem"/>
+
+                <field name="lightbox_size"
+                       type="number"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_SIZE_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_SIZE_DESC"
+                       min="10"
+                       max="100"
+                       default="100"/>
+
+                <field name="lightbox_loop"
+                       type="radio"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_LOOP_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_LOOP_DESC"
+                       layout="joomla.form.field.radio.switcher"
+                       default="1">
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+
+                <field name="middle_zone_action"
+                       type="list"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_MIDDLE_ZONE_ACTION_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_MIDDLE_ZONE_ACTION_DESC"
+                       default="none">
+                    <option value="none">PLG_CONTENT_DINKYGALLERY_PARAM_MIDDLE_ZONE_ACTION_NONE</option>
+                    <option value="close">PLG_CONTENT_DINKYGALLERY_PARAM_MIDDLE_ZONE_ACTION_CLOSE</option>
+                </field>
+
+                <field name="backdrop_opacity"
+                       type="number"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_BACKDROP_OPACITY_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_BACKDROP_OPACITY_DESC"
+                       min="0"
+                       max="100"
+                       default="60"/>
+
+            </fieldset>
+
+            <fieldset name="advanced">
+
+                <field name="debug"
+                       type="radio"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_DEBUG_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_DEBUG_DESC"
+                       layout="joomla.form.field.radio.switcher"
+                       default="0">
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+
+            </fieldset>
+        </fields>
+    </config>
+
+    <updateservers>
+        <server type="extension" priority="1" name="plg_content_dinkygallery">
+            https://www.the-loom.de/extensions/dinkygallery/update.xml
+        </server>
+    </updateservers>
+
+</extension>
