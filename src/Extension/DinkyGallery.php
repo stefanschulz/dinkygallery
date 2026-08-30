@@ -319,6 +319,12 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
             $wa->useStyle('plg_content_dinkygallery');
             $wa->useScript('plg_content_dinkygallery');
 
+            // Client-built lightbox labels.
+            Text::script('PLG_CONTENT_DINKYGALLERY_ARIA_PREV');
+            Text::script('PLG_CONTENT_DINKYGALLERY_ARIA_NEXT');
+            Text::script('PLG_CONTENT_DINKYGALLERY_ARIA_CLOSE');
+            Text::script('PLG_CONTENT_DINKYGALLERY_ARIA_DIALOG');
+
             return 'registered';
         } catch (\Throwable $e) {
             // No asset manager, or the joomla.asset.json entry is missing: the

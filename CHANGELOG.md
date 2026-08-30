@@ -6,6 +6,28 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Slice 4 — lightbox (CSS + JS):
+  - one `.dg-lb` element, built on the first card click and reused. Fixed,
+    full-viewport; a single dimmed layer (`.dg-lb__backdrop`,
+    `rgba(0,0,0,var(--dg-backdrop))` from `data-backdrop`); a **transparent**
+    fixed-size frame (`--dg-size` from `data-size`, `Xvw × Xvh`, capped at the
+    viewport) with the image `object-fit: contain`, centred, so empty frame
+    area shows the dimmed page through it — no letterbox bars.
+  - left / right thirds are real `<button>` nav zones; the middle third is a
+    no-op unless `data-middle="close"`, which reveals a `.dg-lb__zone--mid`
+    that closes. Zones hidden when a gallery has one image; the end zone is
+    `disabled` at the respective end when `data-loop="0"`, wraps otherwise.
+  - close on the × (top-right of the frame), on a backdrop click outside the
+    frame, or on `Esc`. `←` / `→` navigate. Focus moves to × on open, is
+    trapped within the dialog while open (`role="dialog"`, `aria-modal`), and
+    returns to the originating card link on close. Body scroll is locked with
+    scrollbar-width compensation.
+  - the incoming image is preloaded (the previous one stays visible until it
+    is ready); a spinner + opacity dip appears after 150 ms; both neighbours
+    are preloaded after each swap. Backdrop + frame fade in over 120 ms, none
+    under `prefers-reduced-motion`.
+  - lightbox ARIA labels come from `Text::script()` (`Joomla.Text`) with
+    English fallbacks baked into the module.
 - `card_gap` parameter (default `0`) plus a `gap=` shortcode attribute: a CSS
   length for the space between carousel cards, fed to `--dg-gap`. A bare `0` is
   emitted as `0px` — a unitless zero makes the card-basis `calc()` invalid
