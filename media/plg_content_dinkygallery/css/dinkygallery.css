@@ -3,5 +3,201 @@
  * Copyright (C) 2026 The Loom / Stefan Schulz
  * GNU General Public License version 3 or later; see LICENSE.txt
  *
- * Slice 3 (carousel) and Slice 4 (lightbox) fill this in. See .doc/WORKPLAN.md §7.
+ * Class / data-* names are the contract shared with dinkygallery.js and the
+ * server-rendered markup — keep them stable. See .doc/WORKPLAN.md §7.
+ * Slice 3: carousel. Slice 4 adds the lightbox block.
  */
+
+/* ------------------------------------------------------------------ carousel */
+
+.dg {
+    --dg-gap: 1rem;
+    --dg-cards: 3;
+    --dg-aspect: 4 / 3;
+    --dg-card-min: 13rem;
+
+    position: relative;
+    margin: 1.5rem 0;
+}
+
+.dg-track {
+    display: flex;
+    gap: var(--dg-gap);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+}
+
+.dg-card {
+    /* N cards across, but never thinner than --dg-card-min: the strip then just
+       shows fewer and scrolls. One rule, no media queries. */
+    flex: 0 0 max(
+        var(--dg-card-min),
+        calc((100% - (var(--dg-cards) - 1) * var(--dg-gap)) / var(--dg-cards))
+    );
+    scroll-snap-align: start;
+    list-style: none;
+}
+
+.dg-card__link {
+    display: block;
+    position: relative;
+    aspect-ratio: var(--dg-aspect);
+    overflow: hidden;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.06);
+}
+
+.dg-card__link:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
+.dg-card__img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.dg-card__link:hover .dg-card__img,
+.dg-card__link:focus-visible .dg-card__img {
+    transform: scale(1.03);
+}
+
+/* ------------------------------------------------------------ carousel arrows */
+
+.dg-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+
+    display: grid;
+    place-items: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+
+    border: 0;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    cursor: pointer;
+
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.dg-arrow[hidden] {
+    display: none;
+}
+
+.dg-arrow:hover {
+    background: rgba(0, 0, 0, 0.75);
+}
+
+.dg-arrow:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.dg-arrow:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.dg-arrow--prev {
+    left: 0.25rem;
+}
+
+.dg-arrow--next {
+    right: 0.25rem;
+}
+
+.dg-arrow::before {
+    content: "";
+    display: block;
+    width: 0.6rem;
+    height: 0.6rem;
+    border: solid currentColor;
+    border-width: 0 2px 2px 0;
+}
+
+.dg-arrow--prev::before {
+    transform: rotate(135deg);
+    margin-left: 0.2rem;
+}
+
+.dg-arrow--next::before {
+    transform: rotate(-45deg);
+    margin-right: 0.2rem;
+}
+
+/* --------------------------------------------------------------------- rtl */
+
+[dir="rtl"] .dg-arrow--prev {
+    left: auto;
+    right: 0.25rem;
+}
+
+[dir="rtl"] .dg-arrow--next {
+    right: auto;
+    left: 0.25rem;
+}
+
+[dir="rtl"] .dg-arrow--prev::before {
+    transform: rotate(-45deg);
+}
+
+[dir="rtl"] .dg-arrow--next::before {
+    transform: rotate(135deg);
+}
+
+/* -------------------------------------------------- no-JS / non-HTML fallback */
+
+.dg-plain {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin: 1.5rem 0;
+    padding: 0;
+    list-style: none;
+}
+
+.dg-plain > li {
+    list-style: none;
+}
+
+.dg-plain img {
+    display: block;
+    width: auto;
+    max-width: 12rem;
+    height: auto;
+    border-radius: 4px;
+}
+
+/* ------------------------------------------------------------ reduced motion */
+
+@media (prefers-reduced-motion: reduce) {
+    .dg-track {
+        scroll-behavior: auto;
+    }
+
+    .dg-card__img,
+    .dg-arrow {
+        transition: none;
+    }
+
+    .dg-card__link:hover .dg-card__img,
+    .dg-card__link:focus-visible .dg-card__img {
+        transform: none;
+    }
+}

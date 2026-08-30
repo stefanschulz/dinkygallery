@@ -6,6 +6,20 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Slice 3 — carousel styling and behaviour (no lightbox yet):
+  - `css/dinkygallery.css`: scroll-snap flex track; card basis
+    `max(--dg-card-min, (100% - gaps) / --dg-cards)` so a card never falls below
+    `card_min` and the strip just shows fewer and scrolls — one rule, no media
+    queries (the spec offered this or a media-query step-down; picked this).
+    Fixed-aspect `object-fit: cover` card boxes, circular arrow buttons with a
+    CSS chevron, `:focus-visible` outlines, RTL arrow mirroring, a light
+    `.dg-plain` fallback grid, and a `prefers-reduced-motion` block.
+  - `js/dinkygallery.js` (ES module): reveals `.dg-arrow`s only when the track
+    overflows, scrolls one card per click, wraps at the ends when `data-loop=1`
+    else disables the end arrow. The intended position is tracked in `target`
+    (not read back from `scrollLeft`, which lags during a smooth scroll, so
+    rapid clicks used to collapse onto one step); a 140 ms settle timer
+    re-syncs the arrow state after the final scroll event. `resize`-aware.
 - Slice 2 — server-side shortcode processing:
   - `Helper\Shortcode`: finds `{gallery ...}` (bare and attribute forms, the legacy gallery plugin
     grammar, leading bare token accepted as folder), best-effort skip of tags
