@@ -76,7 +76,8 @@ dinkygallery/
 
 ## Phase 2 — `config.xml`-Params + Sprachdateien (zusammen mit Phase 1, damit installierbar)
 
-Alle 11 Params aus Spec §6 als `<fields name="params">`:
+Params aus Spec §6 als `<fields name="params">` (plus `card_gap`, auf Wunsch
+nachgezogen — Default `0`):
 
 | param | Feldtyp | default |
 |---|---|---|
@@ -84,6 +85,7 @@ Alle 11 Params aus Spec §6 als `<fields name="params">`:
 | `visible_cards` | `number` (min 1) | `3` |
 | `card_aspect` | `list` (`4/3`·`3/2`·`1/1`·`16/9`) | `4/3` |
 | `card_min` | `text` | `13rem` |
+| `card_gap` | `text` (CSS-Länge; Override `gap=`) | `0` |
 | `lightbox_size` | `number` (1–100) | `100` |
 | `lightbox_loop` | `radio` switcher (0/1) | `1` (yes) |
 | `middle_zone_action` | `list` (`none`·`close`) | `none` |

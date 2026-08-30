@@ -76,6 +76,13 @@
                        description="PLG_CONTENT_DINKYGALLERY_PARAM_CARD_MIN_DESC"
                        default="13rem"/>
 
+                <field name="card_gap"
+                       type="text"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_CARD_GAP_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_CARD_GAP_DESC"
+                       hint="0"
+                       default="0"/>
+
                 <field name="lightbox_size"
                        type="number"
                        label="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_SIZE_LABEL"

@@ -195,6 +195,7 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
                         'size'     => $options['size'],
                         'loop'     => $options['loop'],
                         'middle'   => $options['middle'],
+                        'gap'      => $this->cssLength((string) $options['gap']),
                         'aspect'   => $config['card_aspect'],
                         'card_min' => $config['card_min'],
                         'backdrop' => $config['backdrop_opacity'],
@@ -245,8 +246,33 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
                 'loop'   => (int) $params->get('lightbox_loop', 1),
                 'sort'   => (string) $params->get('sort_order', 'asc'),
                 'middle' => (string) $params->get('middle_zone_action', 'none'),
+                'gap'    => (string) $params->get('card_gap', '0'),
             ],
         ];
+    }
+
+    /**
+     * Sanitises a user-supplied CSS length before it goes into a style attribute.
+     * Anything that is not "0" or a number with a length unit becomes "0", so the
+     * value cannot break out of the custom-property declaration.
+     *
+     * @param   string  $raw  The raw parameter / shortcode value.
+     *
+     * @return  string
+     *
+     * @since   1.0.0
+     */
+    private function cssLength(string $raw): string
+    {
+        $raw = trim($raw);
+
+        // "0" must go out as "0px": a unitless zero makes "100% - (n-1)*var(--dg-gap)"
+        // an invalid calc() (percentage minus number) and the card sizing collapses.
+        if ($raw === '' || $raw === '0') {
+            return '0px';
+        }
+
+        return preg_match('/^\d*\.?\d+(px|rem|em|%|vw|vh|vmin|vmax|ch)$/', $raw) === 1 ? $raw : '0px';
     }
 
     /**

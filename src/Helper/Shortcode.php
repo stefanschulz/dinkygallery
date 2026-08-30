@@ -35,7 +35,7 @@ final class Shortcode
      * @var    string[]
      * @since  1.0.0
      */
-    private const ATTRIBUTES = ['folder', 'cards', 'size', 'loop', 'sort', 'middle'];
+    private const ATTRIBUTES = ['folder', 'cards', 'size', 'loop', 'sort', 'middle', 'gap'];
 
     /**
      * Locates every {gallery ...} in the given text.

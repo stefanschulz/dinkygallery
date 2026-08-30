@@ -11,7 +11,7 @@
 /* ------------------------------------------------------------------ carousel */
 
 .dg {
-    --dg-gap: 1rem;
+    --dg-gap: 0px; /* needs a unit: it is used inside calc() */
     --dg-cards: 3;
     --dg-aspect: 4 / 3;
     --dg-card-min: 13rem;

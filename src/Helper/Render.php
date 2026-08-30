@@ -28,7 +28,7 @@ final class Render
      * Renders the in-article carousel.
      *
      * @param   list<array{url:string, alt:string, w:?int, h:?int}>  $images  Image list.
-     * @param   array{cards:mixed, size:mixed, loop:mixed, middle:mixed, aspect:string, card_min:string, backdrop:int}  $o  Resolved options.
+     * @param   array{cards:mixed, size:mixed, loop:mixed, middle:mixed, gap:string, aspect:string, card_min:string, backdrop:int}  $o  Resolved options.
      * @param   array{carousel:string, prev:string, next:string}  $labels  Translated ARIA labels.
      *
      * @return  string
@@ -43,7 +43,10 @@ final class Render
         $middle = $o['middle'] === 'close' ? 'close' : 'none';
 
         $style = 'style="' . self::e(
-            '--dg-cards:' . $cards . ';--dg-aspect:' . $o['aspect'] . ';--dg-card-min:' . $o['card_min']
+            '--dg-cards:' . $cards
+            . ';--dg-gap:' . $o['gap']
+            . ';--dg-aspect:' . $o['aspect']
+            . ';--dg-card-min:' . $o['card_min']
         ) . '"';
 
         $html = '<div class="dg" data-dg data-cards="' . $cards . '" data-size="' . $size . '"'

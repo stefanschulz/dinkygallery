@@ -6,6 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- `card_gap` parameter (default `0`) plus a `gap=` shortcode attribute: a CSS
+  length for the space between carousel cards, fed to `--dg-gap`. A bare `0` is
+  emitted as `0px` — a unitless zero makes the card-basis `calc()` invalid
+  (percentage minus number) and collapses the layout. Non-length values are
+  rejected to `0px` so the value can't break out of the `style` attribute.
 - Slice 3 — carousel styling and behaviour (no lightbox yet):
   - `css/dinkygallery.css`: scroll-snap flex track; card basis
     `max(--dg-card-min, (100% - gaps) / --dg-cards)` so a card never falls below
@@ -51,7 +56,7 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 - Repository skeleton (Slice 1 — installable but inert):
   - Extension manifest `dinkygallery.xml` (`type=plugin`, `group=content`,
     `method=upgrade`, `<namespace path="src">`, `<media>` for the CSS/JS/asset
-    manifest, the full 11-parameter form in `basic` + `advanced` fieldsets, an
+    manifest, the parameter form in `basic` + `advanced` fieldsets, an
     update server entry).
   - DI service provider `services/provider.php` (registers `PluginInterface` as
     `new DinkyGallery(Dispatcher, PluginHelper::getPlugin('content','dinkygallery'))`).
