@@ -3,6 +3,25 @@
 All notable changes to `plg_content_dinkygallery` are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - 2026-08-31
+
+### Added
+- **`aspect=` shortcode attribute** — per-gallery override of `card_aspect`.
+  Accepts `W/H`, `W:H` (normalised) or a bare number; anything else falls back
+  to `4/3`.
+- **`deftitle` → alt text.** sigplus's opening-tag `deftitle="…"` is now used as
+  the alt text for every image in that gallery, so a migrated single-image
+  gallery reads as its title instead of the file name.
+
+### Changed
+- **Lightbox: a click during a slide is queued**, not dropped — the last
+  direction wins, opposite clicks cancel, and it is applied as one step when the
+  slide finishes (`flushPendingNav()`).
+- `PLG_CONTENT_DINKYGALLERY_ARIA_POSITION` uses Joomla's `%1$s` / `%2$s`
+  placeholders instead of `{current}` / `{total}`.
+- README: note that `.avif` card dimensions need GD/PHP AVIF support (the CSS
+  aspect box prevents layout shift regardless; the lightbox is unaffected).
+
 ## [1.2.0] - 2026-08-31
 
 ### Added

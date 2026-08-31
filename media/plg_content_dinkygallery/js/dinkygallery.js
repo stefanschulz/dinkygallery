@@ -186,6 +186,7 @@ const lbState = {
     opener: /** @type {HTMLElement|null} */ (null),
     spinTimer: 0,
     sliding: false,
+    pendingDir: 0,
 };
 
 /**
@@ -377,20 +378,27 @@ function applyImageState(i) {
 
     LB.count.hidden = n <= 1;
     LB.count.textContent = (i + 1) + ' / ' + n;
-    LB.status.textContent = t('PLG_CONTENT_DINKYGALLERY_ARIA_POSITION', 'Image {current} of {total}')
-        .replace('{current}', String(i + 1))
-        .replace('{total}', String(n));
+    LB.status.textContent = t('PLG_CONTENT_DINKYGALLERY_ARIA_POSITION', 'Image %1$s of %2$s')
+        .replace('%1$s', String(i + 1))
+        .replace('%2$s', String(n));
 }
 
 /**
- * Moves by one image, wrapping when the gallery loops.
+ * Moves by one image, wrapping when the gallery loops. A click during a slide is
+ * remembered (opposite clicks cancel) and applied when the slide ends.
  *
  * @param {number} dir  -1 or +1.
  */
 function navLightbox(dir) {
     const n = lbState.links.length;
 
-    if (n <= 1 || lbState.sliding) {
+    if (n <= 1) {
+        return;
+    }
+
+    if (lbState.sliding) {
+        lbState.pendingDir = (lbState.pendingDir || 0) + dir;
+
         return;
     }
 
@@ -406,6 +414,19 @@ function navLightbox(dir) {
         showLightboxImage(i);
     } else {
         slideToImage(i, dir);
+    }
+}
+
+/**
+ * Runs a nav that was queued while a slide was in flight (coalesced to one step).
+ */
+function flushPendingNav() {
+    const dir = Math.sign(lbState.pendingDir || 0);
+
+    lbState.pendingDir = 0;
+
+    if (dir && !LB.el.hidden) {
+        navLightbox(dir);
     }
 }
 
@@ -475,6 +496,7 @@ function slideToImage(i, dir) {
 
             if (!LB.el.hidden) {
                 applyImageState(i);
+                flushPendingNav();
             }
         };
 
@@ -508,6 +530,7 @@ function closeLightbox() {
 
         // Collapse any in-flight slide back to a single, reset image.
         lbState.sliding = false;
+        lbState.pendingDir = 0;
         LB.stage.classList.remove('dg-lb__stage--sliding');
         LB.stage.querySelectorAll('.dg-lb__img').forEach((im) => {
             if (im !== LB.img) {

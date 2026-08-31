@@ -57,6 +57,8 @@ per article — each becomes an independent gallery.
 | `sort` | `sort_order` | `asc` / `desc` |
 | `middle` | `middle_zone_action` | `none` / `close` |
 | `gap` | `card_gap` | a CSS length (`0`, `12px`, `1rem`) |
+| `aspect` | `card_aspect` | `W/H`, `W:H` or a number (`4/3`, `16:9`, `1.5`) |
+| `deftitle` | — | sigplus opening attribute; used as the images' alt text |
 
 **Folder safety.** The path is resolved under `JPATH_ROOT/<base_directory>/`. A leading
 slash is ignored; a tag renders as nothing (with a reason in the debug comment) if the
@@ -166,6 +168,9 @@ curl -s https://example.com/some-article | grep -E 'dg-track|dg-card|DinkyGaller
 - **No thumbnails in v1.** Cards load the full-size images (with intrinsic
   `width`/`height` so there is no layout shift). Server-side thumbnail generation and
   `srcset` are a v1.1 candidate.
+- **AVIF dimensions.** `@getimagesize()` needs GD/PHP with AVIF support to read an
+  `.avif` file's size; without it those cards render without `width`/`height` (the CSS
+  aspect box still prevents layout shift, and the lightbox is unaffected).
 
 ## Scope
 

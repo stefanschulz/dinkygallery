@@ -39,7 +39,16 @@ final class Shortcode
      * @var    string[]
      * @since  1.0.0
      */
-    private const ATTRIBUTES = ['folder', 'cards', 'size', 'loop', 'sort', 'middle', 'gap'];
+    private const ATTRIBUTES = ['folder', 'cards', 'size', 'loop', 'sort', 'middle', 'gap', 'aspect'];
+
+    /**
+     * Extra keys kept from the opening tag even though they are not overrides: a
+     * sigplus "default title" becomes the image alt text.
+     *
+     * @var    string[]
+     * @since  1.3.0
+     */
+    private const PASSTHROUGH = ['deftitle'];
 
     /**
      * Locates every {gallery ...} in the given text.
@@ -124,7 +133,7 @@ final class Shortcode
                     continue;
                 }
 
-                if (\in_array($key, self::ATTRIBUTES, true)) {
+                if (\in_array($key, self::ATTRIBUTES, true) || \in_array($key, self::PASSTHROUGH, true)) {
                     $opts[$key] = $val;
                 }
             }

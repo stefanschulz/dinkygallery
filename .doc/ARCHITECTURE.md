@@ -2,7 +2,7 @@
 
 Primary technical reference for developers and AI agents working on this codebase.
 
-**Version**: 1.2.0
+**Version**: 1.3.0
 **Last Updated**: August 2026
 
 ---
@@ -123,8 +123,9 @@ the keys the tag carries.
 - Body with no `=` → `{folder: body}`. Body with `=` → the shell-style token grammar
   `#(?<=\s|^)(?:([A-Za-z_][\w:.\-]*)=)?('…'|"…"|-?\d+(\.\d+)?|[\w:.\/\-]+)(?=\s|$)#`;
   a leading un-named value is the folder; recognised keys are `folder`, `cards`, `size`,
-  `loop`, `sort`, `middle`, `gap`; the rest are ignored (so sigplus's `width`,
-  `height`, `deftitle`, `lightbox`, … in the opening tag do no harm).
+  `loop`, `sort`, `middle`, `gap`, `aspect`; `deftitle` is kept as a passthrough (it
+  becomes the alt text); the rest are ignored (so sigplus's `width`, `height`,
+  `lightbox`, … in the opening tag do no harm).
 - **Closing-tag form:** when `{/gallery}` is present, the trimmed inner text becomes
   `folder` (overriding anything from the opening tag). It may name a directory or a
   single image file.
@@ -249,9 +250,10 @@ One `.dg-lb` element, built lazily on the first card click and reused. Structure
   second `.dg-lb__img` translated `±stage-width`, forces a reflow, adds
   `.dg-lb__stage--sliding` (`transition: transform 280ms`) and moves the outgoing one
   out / the incoming one to 0. On `transitionend` (or a 450 ms fallback) the old
-  image is removed and `applyImageState()` runs. `lbState.sliding` blocks re-entry;
-  `closeLightbox()` collapses an in-flight slide. No `requestAnimationFrame` — it is
-  paused while the tab is not painting, which would strand the slide.
+  image is removed and `applyImageState()` runs. No `requestAnimationFrame` — it is
+  paused while the tab is not painting, which would strand the slide. A click during
+  a slide is accumulated in `lbState.pendingDir` (opposite clicks cancel) and applied
+  as one step by `flushPendingNav()` when the slide ends; `closeLightbox()` clears it.
 - **Position.** `.dg-lb__count` shows `i+1 / n` (hidden for `n === 1`); `.dg-lb__status`
   gets "Image i+1 of n" from `PLG_CONTENT_DINKYGALLERY_ARIA_POSITION` for the live
   region — both updated on every swap.
@@ -272,7 +274,7 @@ Two fieldsets: `basic` and `advanced`.
 | `image_extensions` | text | `jpg,jpeg,png,webp,gif,avif` | `DinkyGallery::extensionList()` → `Folder` |
 | `sort_order` | list `asc`/`desc` | `asc` | `Folder::images()` (option `sort`) |
 | `visible_cards` | number | `3` | `--dg-cards` / `data-cards` (option `cards`) |
-| `card_aspect` | list | `4/3` | `--dg-aspect` |
+| `card_aspect` | list | `4/3` | `--dg-aspect` via `cssAspect()` (option `aspect`) |
 | `card_min` | text | `13rem` | `--dg-card-min` |
 | `card_gap` | text | `0` | `--dg-gap` via `cssLength()` (option `gap`) |
 | `lightbox_size` | number 10–100 | `100` | `data-size` → `--dg-size` (option `size`) |

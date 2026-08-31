@@ -199,6 +199,17 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
                 ? $folder->single($absPath, $relBase)
                 : $folder->images($absPath, $relBase, (string) $options['sort']);
 
+            // sigplus "default title" -> alt text for every image in this gallery.
+            $deftitle = trim((string) ($options['deftitle'] ?? ''));
+
+            if ($deftitle !== '') {
+                foreach ($images as &$image) {
+                    $image['alt'] = $deftitle;
+                }
+
+                unset($image);
+            }
+
             if ($images === []) {
                 $tagLog[$match['start']] = $at . ': removed (0 images) [' . $absPath . ']';
                 $text = substr_replace($text, '', $match['start'], $match['length']);
@@ -217,7 +228,7 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
                         'loop'     => $options['loop'],
                         'middle'   => $options['middle'],
                         'gap'      => $gap,
-                        'aspect'   => $config['card_aspect'],
+                        'aspect'   => $this->cssAspect((string) $options['aspect']),
                         'card_min' => $config['card_min'],
                         'backdrop' => $config['backdrop_opacity'],
                         'lb_color' => $config['lightbox_rgb'],
@@ -234,7 +245,8 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
             $tagLog[$match['start']] = $at . ': ' . $count . ' image' . ($count === 1 ? '' : 's')
                 . ' (cards=' . (int) $options['cards'] . ' size=' . (int) $options['size']
                 . ' loop=' . (int) $options['loop'] . ' sort=' . $options['sort']
-                . ' middle=' . $options['middle'] . ' gap=' . $gap . ') [' . $absPath . ']';
+                . ' middle=' . $options['middle'] . ' gap=' . $gap
+                . ' aspect=' . $this->cssAspect((string) $options['aspect']) . ') [' . $absPath . ']';
         }
 
         ksort($tagLog);
@@ -258,7 +270,7 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
     /**
      * Reads the plugin parameters into resolved defaults.
      *
-     * @return  array{base_directory:string, extensions:string[], card_aspect:string, card_min:string, backdrop_opacity:int, options:array<string,mixed>}
+     * @return  array{base_directory:string, extensions:string[], card_min:string, backdrop_opacity:int, lightbox_rgb:string, lightbox_padding:string, options:array<string,mixed>}
      *
      * @since   1.0.0
      */
@@ -271,7 +283,6 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
         return [
             'base_directory'   => $base !== '' ? $base : 'images',
             'extensions'       => $this->extensionList((string) $params->get('image_extensions', 'jpg,jpeg,png,webp,gif,avif')),
-            'card_aspect'      => (string) $params->get('card_aspect', '4/3'),
             'card_min'         => trim((string) $params->get('card_min', '13rem')) ?: '13rem',
             'backdrop_opacity' => (int) $params->get('backdrop_opacity', 60),
             'lightbox_rgb'     => $this->hexToRgb((string) $params->get('lightbox_color', '#000000')),
@@ -284,8 +295,26 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
                 'sort'   => (string) $params->get('sort_order', 'asc'),
                 'middle' => (string) $params->get('middle_zone_action', 'none'),
                 'gap'    => (string) $params->get('card_gap', '0'),
+                'aspect' => (string) $params->get('card_aspect', '4/3'),
             ],
         ];
+    }
+
+    /**
+     * Sanitises a card aspect ratio for the "--dg-aspect" custom property. Accepts
+     * "W/H", "W:H" (normalised to "/") or a bare number; anything else -> "4/3".
+     *
+     * @param   string  $raw  The parameter / shortcode value.
+     *
+     * @return  string
+     *
+     * @since   1.3.0
+     */
+    private function cssAspect(string $raw): string
+    {
+        $raw = str_replace(':', '/', trim($raw));
+
+        return preg_match('#^\d*\.?\d+(\s*/\s*\d*\.?\d+)?$#', $raw) === 1 ? $raw : '4/3';
     }
 
     /**
