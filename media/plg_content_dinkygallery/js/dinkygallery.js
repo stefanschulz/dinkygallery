@@ -56,6 +56,13 @@ function initCarousel(dg) {
     };
 
     const go = (dir) => {
+        // Idle (no animation of ours running): re-anchor to the real position so
+        // `target` cannot drift. Mid-animation, keep accumulating so a burst of
+        // clicks steps that many cards instead of collapsing onto one.
+        if (!programmatic) {
+            target = track.scrollLeft;
+        }
+
         const max = maxScroll();
         let dest = target + dir * stepSize();
 
@@ -228,12 +235,40 @@ function openLightbox(dg, startIndex, opener) {
     LB.mid.hidden = dg.dataset.middle !== 'close';
 
     lockScroll();
+    setBackgroundInert(true);
     LB.el.hidden = false;
     void LB.el.offsetWidth; // reflow so the opacity transition runs
     LB.el.classList.add('dg-lb--open');
 
     showLightboxImage(startIndex);
     LB.close.focus();
+}
+
+/**
+ * Marks every body child except the lightbox `inert` while it is open, so assistive
+ * tech and Tab cannot reach the page behind it. The manual focus trap stays as a
+ * fallback for browsers without `inert`.
+ *
+ * @param {boolean} on
+ */
+function setBackgroundInert(on) {
+    for (const child of document.body.children) {
+        if (child === LB.el) {
+            continue;
+        }
+
+        if (on) {
+            if (child.inert) {
+                continue;
+            }
+
+            child.inert = true;
+            child.dataset.dgInert = '1';
+        } else if (child.dataset.dgInert) {
+            child.inert = false;
+            delete child.dataset.dgInert;
+        }
+    }
 }
 
 /**
@@ -318,6 +353,7 @@ function closeLightbox() {
         LB.el.hidden = true;
         LB.img.removeAttribute('src');
         unlockScroll();
+        setBackgroundInert(false);
 
         if (lbState.opener) {
             lbState.opener.focus();
