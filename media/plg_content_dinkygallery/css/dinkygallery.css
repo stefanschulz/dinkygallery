@@ -20,7 +20,10 @@
     margin: 1.5rem 0;
 }
 
-.dg-track {
+/* Scoped under .dg to out-weigh site-template rules such as Cassiopeia's
+   ".com-content-article ul { overflow: hidden }" (0,1,1), which would otherwise
+   kill touch / wheel / scrollbar scrolling of the strip. */
+.dg .dg-track {
     display: flex;
     gap: var(--dg-gap);
     margin: 0;
@@ -35,7 +38,7 @@
     -webkit-overflow-scrolling: touch;
 }
 
-.dg-card {
+.dg .dg-card {
     /* N cards across, but never thinner than --dg-card-min: the strip then just
        shows fewer and scrolls. One rule, no media queries. */
     flex: 0 0 max(
@@ -44,6 +47,7 @@
     );
     scroll-snap-align: start;
     list-style: none;
+    margin: 0;
 }
 
 .dg-card__link {
@@ -163,7 +167,8 @@
 
 /* -------------------------------------------------- no-JS / non-HTML fallback */
 
-.dg-plain {
+/* Doubled class: same specificity trick, this list is not inside .dg. */
+.dg-plain.dg-plain {
     display: flex;
     flex-wrap: wrap;
     gap: 0.75rem;
@@ -172,8 +177,9 @@
     list-style: none;
 }
 
-.dg-plain > li {
+.dg-plain.dg-plain > li {
     list-style: none;
+    margin: 0;
 }
 
 .dg-plain img {
@@ -392,7 +398,7 @@
 /* ------------------------------------------------------------ reduced motion */
 
 @media (prefers-reduced-motion: reduce) {
-    .dg-track {
+    .dg .dg-track {
         scroll-behavior: auto;
     }
 
