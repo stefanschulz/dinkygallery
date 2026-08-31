@@ -16,6 +16,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   full-size image (`new Image()`, once per URL), so the lightbox opens instantly.
 
 ### Changed
+- The carousel strip's native horizontal scrollbar is hidden on all engines
+  (`scrollbar-width` / `-ms-overflow-style` / `::-webkit-scrollbar`); scrolling
+  by arrows, touch, wheel and trackpad is unchanged. It became visible in 1.0.0
+  once the strip was actually made scrollable.
 - Assets are registered inline via `registerAndUseStyle` / `registerAndUseScript`
   with `version=auto` instead of a `joomla.asset.json` — one less moving part (no
   `addExtensionRegistryFile` dance) and the media version, refreshed by Joomla on

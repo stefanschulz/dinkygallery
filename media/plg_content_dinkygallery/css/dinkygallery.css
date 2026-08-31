@@ -34,8 +34,17 @@
     overscroll-behavior-x: contain;
     scroll-snap-type: x mandatory;
     scroll-behavior: smooth;
-    scrollbar-width: thin;
     -webkit-overflow-scrolling: touch;
+
+    /* Scrollable, but no visible scrollbar — the arrows, touch and wheel drive it. */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.dg .dg-track::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
 }
 
 .dg .dg-card {
