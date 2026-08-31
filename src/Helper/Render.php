@@ -57,15 +57,23 @@ final class Render
         $html .= '<button type="button" class="dg-arrow dg-arrow--prev" aria-label="' . self::e($labels['prev']) . '" hidden></button>';
         $html .= '<ul class="dg-track" role="list">';
 
-        foreach ($images as $img) {
+        $total = \count($images);
+
+        foreach ($images as $i => $img) {
             $url  = self::e($img['url']);
             $dims = ($img['w'] && $img['h']) ? ' data-w="' . (int) $img['w'] . '" data-h="' . (int) $img['h'] . '"' : '';
             $wh   = ($img['w'] && $img['h']) ? ' width="' . (int) $img['w'] . '" height="' . (int) $img['h'] . '"' : '';
+
+            // A "1 / N" count sits on the first card as a gallery-size hint.
+            $count = ($i === 0 && $total > 1)
+                ? '<span class="dg-count" aria-hidden="true">1&#8202;/&#8202;' . $total . '</span>'
+                : '';
 
             $html .= '<li class="dg-card">'
                 . '<a class="dg-card__link" href="' . $url . '" data-full="' . $url . '"' . $dims . '>'
                 . '<img class="dg-card__img" src="' . $url . '" alt="' . self::e($img['alt']) . '"'
                 . ' loading="lazy" decoding="async"' . $wh . '>'
+                . $count
                 . '</a></li>';
         }
 

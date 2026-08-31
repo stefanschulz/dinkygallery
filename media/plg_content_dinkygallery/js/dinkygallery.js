@@ -176,7 +176,9 @@ function buildLightbox() {
         + '<button type="button" class="dg-lb__zone dg-lb__zone--mid" hidden></button>'
         + '<button type="button" class="dg-lb__zone dg-lb__zone--next"></button>'
         + '<button type="button" class="dg-lb__close" data-dg-close>×</button>'
-        + '</div>';
+        + '<div class="dg-lb__count" aria-hidden="true" hidden></div>'
+        + '</div>'
+        + '<div class="dg-lb__status" role="status" aria-live="polite"></div>';
 
     document.body.appendChild(el);
 
@@ -189,6 +191,8 @@ function buildLightbox() {
         mid: el.querySelector('.dg-lb__zone--mid'),
         next: el.querySelector('.dg-lb__zone--next'),
         close: el.querySelector('.dg-lb__close'),
+        count: el.querySelector('.dg-lb__count'),
+        status: el.querySelector('.dg-lb__status'),
     };
 
     refs.prev.setAttribute('aria-label', t('PLG_CONTENT_DINKYGALLERY_ARIA_PREV', 'Previous image'));
@@ -313,6 +317,13 @@ function showLightboxImage(i) {
     LB.next.disabled = atEnds && i >= n - 1;
     LB.prev.setAttribute('aria-disabled', String(LB.prev.disabled));
     LB.next.setAttribute('aria-disabled', String(LB.next.disabled));
+
+    // Position: a visible "3 / 12" pill, and a spoken "Image 3 of 12".
+    LB.count.hidden = n <= 1;
+    LB.count.textContent = (i + 1) + ' / ' + n;
+    LB.status.textContent = t('PLG_CONTENT_DINKYGALLERY_ARIA_POSITION', 'Image {current} of {total}')
+        .replace('{current}', String(i + 1))
+        .replace('{total}', String(n));
 }
 
 /**
@@ -480,6 +491,22 @@ function init() {
 
         openLightbox(dg, Math.max(0, links.indexOf(link)), link);
     });
+
+    // Warm the full-size image the moment a card is pointed at or focused, so the
+    // lightbox has it ready. Each URL is fetched at most once.
+    const warmed = new Set();
+    const warm = (e) => {
+        const link = e.target.closest ? e.target.closest('.dg-card__link') : null;
+        const url = link && (link.dataset.full || link.getAttribute('href'));
+
+        if (url && !warmed.has(url)) {
+            warmed.add(url);
+            new Image().src = url;
+        }
+    };
+
+    document.addEventListener('pointerover', warm, { passive: true });
+    document.addEventListener('focusin', warm);
 }
 
 if (document.readyState === 'loading') {

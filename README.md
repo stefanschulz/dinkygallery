@@ -79,9 +79,13 @@ click **outside the frame**, and on **Esc**; `←` / `→` navigate; focus is tr
 the dialog and returns to the card on close.
 
 Only the frame is dimmed (`lightbox_color` at `backdrop_opacity` %): a lightbox smaller
-than the viewport leaves the page around it clear. The incoming image is preloaded (the
-previous one stays visible until it is ready) and both neighbours are preloaded for
-instant navigation.
+than the viewport leaves the page around it clear. A `3 / 12` position counter sits on
+the frame's bottom edge (and is announced to screen readers). The incoming image is
+preloaded (the previous one stays visible until it is ready), both neighbours are
+preloaded, and a card's full image is warmed as soon as you point at it — navigation
+and opening are instant.
+
+The first carousel card carries a small `1 / N` badge as a gallery-size hint.
 
 **Without JavaScript** — the cards are plain links to the full images; the strip still
 scrolls. On a feed, `tmpl=component`, `print=1` or any non-HTML document, the gallery

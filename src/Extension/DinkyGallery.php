@@ -377,22 +377,33 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
         try {
             $wa = $doc->getWebAssetManager();
 
-            // Extension asset files are not auto-discovered; register ours first.
-            $wa->getRegistry()->addExtensionRegistryFile('plg_content_dinkygallery');
-
-            $wa->useStyle('plg_content_dinkygallery');
-            $wa->useScript('plg_content_dinkygallery');
+            // Register inline (no joomla.asset.json to auto-discover). version=auto
+            // stamps the media version, which Joomla refreshes on every extension
+            // install/update, so a plugin update busts the browser cache. The
+            // resolver inserts the css/ and js/ sub-folders itself.
+            $wa->registerAndUseStyle(
+                'plg_content_dinkygallery',
+                'plg_content_dinkygallery/dinkygallery.css',
+                ['version' => 'auto']
+            );
+            $wa->registerAndUseScript(
+                'plg_content_dinkygallery',
+                'plg_content_dinkygallery/dinkygallery.js',
+                ['version' => 'auto'],
+                ['type' => 'module']
+            );
 
             // Client-built lightbox labels.
             Text::script('PLG_CONTENT_DINKYGALLERY_ARIA_PREV');
             Text::script('PLG_CONTENT_DINKYGALLERY_ARIA_NEXT');
             Text::script('PLG_CONTENT_DINKYGALLERY_ARIA_CLOSE');
             Text::script('PLG_CONTENT_DINKYGALLERY_ARIA_DIALOG');
+            Text::script('PLG_CONTENT_DINKYGALLERY_ARIA_POSITION');
 
             return 'registered';
         } catch (\Throwable $e) {
-            // No asset manager, or the joomla.asset.json entry is missing: the
-            // carousel still degrades to a scrollable strip of linked images.
+            // No asset manager available: the carousel still degrades to a
+            // scrollable strip of linked images.
             return 'FAILED - ' . $e->getMessage();
         }
     }

@@ -20,7 +20,6 @@
     </files>
 
     <media destination="plg_content_dinkygallery" folder="media/plg_content_dinkygallery">
-        <filename>joomla.asset.json</filename>
         <folder>css</folder>
         <folder>js</folder>
     </media>

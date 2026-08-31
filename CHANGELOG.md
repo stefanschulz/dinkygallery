@@ -3,6 +3,26 @@
 All notable changes to `plg_content_dinkygallery` are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+- **Position indicator.** A `1 / N` pill on the first carousel card (server-rendered,
+  shown only when a gallery has more than one image) as a gallery-size hint; a
+  `3 / 12` pill centred on the lightbox frame's bottom edge, updated on every
+  navigation; and a visually-hidden `role="status"` region that announces
+  "Image 3 of 12" (`PLG_CONTENT_DINKYGALLERY_ARIA_POSITION`, en-GB + de-DE) to
+  screen readers.
+- **Full-size preload on intent.** Pointing at or focusing a card warms its
+  full-size image (`new Image()`, once per URL), so the lightbox opens instantly.
+
+### Changed
+- Assets are registered inline via `registerAndUseStyle` / `registerAndUseScript`
+  with `version=auto` instead of a `joomla.asset.json` — one less moving part (no
+  `addExtensionRegistryFile` dance) and the media version, refreshed by Joomla on
+  every extension install/update, busts the browser cache. `joomla.asset.json`
+  removed; the `<media>` manifest entry updated.
+- Repository: `.gitattributes` (LF, binary image/zip types) and `.editorconfig`.
+
 ## [1.0.0] - 2026-08-31
 
 First release. `{gallery …}` in a `com_content` article becomes an in-article card

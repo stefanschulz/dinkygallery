@@ -33,7 +33,6 @@ dinkygallery/
 ├── src/Helper/Folder.php                # Resolve + validate folder, list images, per-request getimagesize cache
 ├── src/Helper/Render.php                # Build the .dg carousel markup / the .dg-plain fallback list
 ├── media/plg_content_dinkygallery/
-│   ├── joomla.asset.json               # Declares the style + module script (named plg_content_dinkygallery)
 │   ├── css/dinkygallery.css            # Carousel + lightbox styles
 │   └── js/dinkygallery.js              # ES module: carousel arrows + lightbox
 ├── language/{en-GB,de-DE}/             # plg_content_dinkygallery.ini (+ .sys.ini)
@@ -46,11 +45,16 @@ PSR-4: `TheLoom\Plugin\Content\DinkyGallery\` maps to `src/` via `<namespace
 path="src">`. `services/` is flagged as the plugin entry folder with `<folder
 plugin="dinkygallery">services</folder>`.
 
-**Media layout matters.** Joomla's relative asset resolver
-(`HTMLHelper::includeRelativeFiles`) resolves `uri: "plg_content_dinkygallery/x.css"`
-**only** at `media/plg_content_dinkygallery/css/x.css` (and `js/` for scripts) — a flat
-`media/plg_content_dinkygallery/x.css` is silently dropped. The files must stay in the
-`css/` and `js/` sub-folders.
+**Media layout matters.** Assets are registered inline from
+`DinkyGallery::loadAssets()` with `registerAndUseStyle` /
+`registerAndUseScript('plg_content_dinkygallery', 'plg_content_dinkygallery/x.css',
+['version' => 'auto'])`. The resolver (`HTMLHelper::includeRelativeFiles`) inserts the
+`css/` / `js/` sub-folder itself and resolves that URI **only** at
+`media/plg_content_dinkygallery/css/x.css` — a flat `media/plg_content_dinkygallery/x.css`
+is silently dropped, so the files must stay in `css/` and `js/`. `version=auto` stamps
+the media version, which Joomla refreshes on every extension install/update, so a
+plugin update busts the browser cache. There is no `joomla.asset.json` (extension asset
+files are not auto-discovered anyway).
 
 ---
 
@@ -159,6 +163,7 @@ files — **keep them stable**.
          data-w="4032" data-h="3024">
         <img class="dg-card__img" src="/images/…/01.jpg" alt="01"
              loading="lazy" decoding="async" width="4032" height="3024">
+        <span class="dg-count" aria-hidden="true">1 / 12</span>   <!-- first card only, N > 1 -->
       </a>
     </li>
     …
@@ -168,7 +173,8 @@ files — **keep them stable**.
 ```
 
 `data-w`/`data-h` and the `<img>` `width`/`height` are omitted together when
-`getimagesize` failed.
+`getimagesize` failed. `.dg-count` is rendered only on the first card and only when
+the gallery has more than one image.
 
 ### Carousel (CSS)
 
@@ -191,7 +197,9 @@ one step); a 140 ms settle timer re-syncs the arrow state after the last scroll 
 One `.dg-lb` element, built lazily on the first card click and reused. Structure:
 `.dg-lb__backdrop[data-dg-close]` (transparent full-viewport click catcher) +
 `.dg-lb__frame` (the dimmed, fixed-size mat) containing `.dg-lb__img`, three
-`.dg-lb__zone` buttons (`--prev` / `--mid` / `--next`) and `.dg-lb__close`.
+`.dg-lb__zone` buttons (`--prev` / `--mid` / `--next`), `.dg-lb__close` and
+`.dg-lb__count` (the visible `3 / 12` pill); plus a visually-hidden
+`.dg-lb__status[role=status][aria-live=polite]` as a sibling of the frame.
 
 - **Dim on the frame, not the viewport.** `.dg-lb__frame` background is
   `rgba(var(--dg-lb-rgb), var(--dg-backdrop))`; the backdrop is unpainted. A lightbox
@@ -218,7 +226,11 @@ One `.dg-lb` element, built lazily on the first card click and reused. Structure
   scrollbar width, restored on close.
 - **Image swap.** The incoming image is loaded via `new Image()`; the visible one stays
   until it is ready; a spinner + opacity dip appears after 150 ms; both neighbours are
-  then preloaded.
+  then preloaded. A card's full image is also warmed on `pointerover` / `focusin`
+  (once per URL), so opening the lightbox is usually instant.
+- **Position.** `.dg-lb__count` shows `i+1 / n` (hidden for `n === 1`); `.dg-lb__status`
+  gets "Image i+1 of n" from `PLG_CONTENT_DINKYGALLERY_ARIA_POSITION` for the live
+  region — both updated on every swap.
 - **Motion.** Backdrop + frame fade over 120 ms; nothing animates under
   `prefers-reduced-motion: reduce`.
 - **i18n.** Lightbox ARIA labels come from `Text::script()` / `Joomla.Text._()` with

@@ -77,6 +77,20 @@
     transform: scale(1.03);
 }
 
+/* "1 / N" gallery-size hint on the first card. */
+.dg-count {
+    position: absolute;
+    right: 0.4rem;
+    bottom: 0.4rem;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 0.8rem;
+    line-height: 1.5;
+    pointer-events: none;
+}
+
 /* ------------------------------------------------------------ carousel arrows */
 
 .dg-arrow {
@@ -251,6 +265,40 @@
     height: auto;
     object-fit: contain; /* fitted by ratio inside the fixed frame — requirement 4 */
     transition: opacity 120ms ease;
+}
+
+/* "3 / 12" counter, centred on the frame's bottom edge. */
+.dg-lb__count {
+    position: absolute;
+    left: 50%;
+    bottom: calc(var(--dg-lb-padding, 10px) + 0.5rem);
+    transform: translateX(-50%);
+    z-index: 2;
+    padding: 0.25rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.55);
+    color: #fff;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    pointer-events: none;
+}
+
+.dg-lb__count[hidden] {
+    display: none;
+}
+
+/* Screen-reader position announcement, visually hidden. */
+.dg-lb__status {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
 }
 
 .dg-lb__zone {
