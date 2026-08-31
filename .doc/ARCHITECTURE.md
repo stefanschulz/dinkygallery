@@ -389,6 +389,17 @@ with a logged reason, `{gallery}` in `<pre>` left literal, `notes.txt` skipped,
 regardless of gallery count, none on `tmpl=component` (plain list) or when nothing
 rendered, `mod_custom` module renders, RTL mirrors the zones, no PHP notices.
 
+Since 1.2.0 also: the sigplus `{gallery …}path{/gallery}` form, a leading-slash path
+and a single-file path all resolve; since 1.3.0: `aspect=` override (incl. `W:H`),
+`deftitle` → alt text, and a click queued during a slide advances one extra step
+(opposite clicks cancel).
+
+### Lighthouse (1.3.0, Chrome, Navigation / Desktop)
+
+Performance **97**, Accessibility **100**, Best Practices **100**, SEO **100** on an
+article page. The Performance gap is "properly size images / next-gen formats" — cards
+load the full images with no `srcset`, the documented v1.1 item.
+
 ---
 
 **End of Technical Architecture Documentation**

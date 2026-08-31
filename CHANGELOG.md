@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [1.3.0] - 2026-08-31
 
+Lighthouse (Chrome, Navigation / Desktop) on an article page: Performance **97**,
+Accessibility **100**, Best Practices **100**, SEO **100**. The Performance gap is
+"properly size images / next-gen formats" — the documented v1.1 `srcset` item.
+
 ### Added
 - **`aspect=` shortcode attribute** — per-gallery override of `card_aspect`.
   Accepts `W/H`, `W:H` (normalised) or a bare number; anything else falls back
