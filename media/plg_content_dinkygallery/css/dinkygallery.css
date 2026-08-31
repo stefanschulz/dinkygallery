@@ -266,6 +266,22 @@
     background: rgba(var(--dg-lb-rgb, 0, 0, 0), var(--dg-backdrop, 0.6));
 }
 
+/* Fitted shape (lightbox_aspect = a ratio, or "image"): the largest box of that
+   ratio that still fits inside lightbox_size% of the viewport in both axes. */
+.dg-lb--fitted .dg-lb__frame {
+    aspect-ratio: var(--dg-lb-aspect, 4 / 3);
+    height: auto;
+    width: min(
+        calc(var(--dg-size) * 1vw),
+        calc(var(--dg-size) * 1vh * (var(--dg-lb-aspect, 4 / 3)))
+    );
+}
+
+/* "image" mode retargets --dg-lb-aspect per image; ease the frame between shapes. */
+.dg-lb--fit-image .dg-lb__frame {
+    transition: width 240ms ease;
+}
+
 /* The image area: inset by the padding, clips the sliding images. */
 .dg-lb__stage {
     position: absolute;
@@ -479,6 +495,7 @@
     .dg-lb,
     .dg-lb__img,
     .dg-lb__stage--sliding .dg-lb__img,
+    .dg-lb--fit-image .dg-lb__frame,
     .dg-lb__zone--prev::before,
     .dg-lb__zone--next::before {
         transition: none;

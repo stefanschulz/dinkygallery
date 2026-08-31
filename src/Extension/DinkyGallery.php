@@ -233,6 +233,7 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
                         'backdrop' => $config['backdrop_opacity'],
                         'lb_color' => $config['lightbox_rgb'],
                         'lb_pad'   => $config['lightbox_padding'],
+                        'lb_aspect' => $config['lightbox_aspect'],
                     ],
                     $labels
                 )
@@ -287,6 +288,7 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
             'backdrop_opacity' => (int) $params->get('backdrop_opacity', 60),
             'lightbox_rgb'     => $this->hexToRgb((string) $params->get('lightbox_color', '#000000')),
             'lightbox_padding' => $this->cssLength((string) $params->get('lightbox_padding', '10px'), '10px'),
+            'lightbox_aspect'  => $this->lightboxAspect((string) $params->get('lightbox_aspect', 'viewport')),
             'options'          => [
                 'folder' => '',
                 'cards'  => (int) $params->get('visible_cards', 3),
@@ -315,6 +317,27 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
         $raw = str_replace(':', '/', trim($raw));
 
         return preg_match('#^\d*\.?\d+(\s*/\s*\d*\.?\d+)?$#', $raw) === 1 ? $raw : '4/3';
+    }
+
+    /**
+     * Resolves the lightbox_aspect parameter to "viewport", "image" or a sanitised
+     * "W/H" ratio. Anything unrecognised -> "viewport" (today's behaviour).
+     *
+     * @param   string  $raw  The parameter value.
+     *
+     * @return  string
+     *
+     * @since   1.4.0
+     */
+    private function lightboxAspect(string $raw): string
+    {
+        $raw = strtolower(str_replace(':', '/', trim($raw)));
+
+        if ($raw === 'image') {
+            return 'image';
+        }
+
+        return preg_match('#^\d*\.?\d+(\s*/\s*\d*\.?\d+)?$#', $raw) === 1 ? $raw : 'viewport';
     }
 
     /**

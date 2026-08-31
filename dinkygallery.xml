@@ -7,7 +7,7 @@
     <license>GNU General Public License version 3 or later; see LICENSE.txt</license>
     <authorEmail>schulz@the-loom.de</authorEmail>
     <authorUrl>https://www.the-loom.de</authorUrl>
-    <version>1.3.0</version>
+    <version>1.4.0</version>
     <description>PLG_CONTENT_DINKYGALLERY_XML_DESCRIPTION</description>
 
     <namespace path="src">TheLoom\Plugin\Content\DinkyGallery</namespace>
@@ -82,28 +82,6 @@
                        hint="0"
                        default="0"/>
 
-                <field name="lightbox_size"
-                       type="number"
-                       label="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_SIZE_LABEL"
-                       description="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_SIZE_DESC"
-                       min="10"
-                       max="100"
-                       default="100"/>
-
-                <field name="lightbox_color"
-                       type="color"
-                       format="hex"
-                       label="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_COLOR_LABEL"
-                       description="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_COLOR_DESC"
-                       default="#000000"/>
-
-                <field name="lightbox_padding"
-                       type="text"
-                       label="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_PADDING_LABEL"
-                       description="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_PADDING_DESC"
-                       hint="10px"
-                       default="10px"/>
-
                 <field name="lightbox_loop"
                        type="radio"
                        label="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_LOOP_LABEL"
@@ -114,14 +92,40 @@
                     <option value="1">JYES</option>
                 </field>
 
-                <field name="middle_zone_action"
-                       type="list"
-                       label="PLG_CONTENT_DINKYGALLERY_PARAM_MIDDLE_ZONE_ACTION_LABEL"
-                       description="PLG_CONTENT_DINKYGALLERY_PARAM_MIDDLE_ZONE_ACTION_DESC"
-                       default="none">
-                    <option value="none">PLG_CONTENT_DINKYGALLERY_PARAM_MIDDLE_ZONE_ACTION_NONE</option>
-                    <option value="close">PLG_CONTENT_DINKYGALLERY_PARAM_MIDDLE_ZONE_ACTION_CLOSE</option>
-                </field>
+            </fieldset>
+
+            <fieldset name="lightbox"
+                      label="PLG_CONTENT_DINKYGALLERY_FIELDSET_LIGHTBOX_LABEL"
+                      description="PLG_CONTENT_DINKYGALLERY_FIELDSET_LIGHTBOX_DESC">
+
+                <field name="lightbox_aspect"
+                       type="text"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_ASPECT_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_ASPECT_DESC"
+                       hint="viewport"
+                       default="viewport"/>
+
+                <field name="lightbox_size"
+                       type="number"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_SIZE_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_SIZE_DESC"
+                       min="10"
+                       max="100"
+                       default="100"/>
+
+                <field name="lightbox_padding"
+                       type="text"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_PADDING_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_PADDING_DESC"
+                       hint="10px"
+                       default="10px"/>
+
+                <field name="lightbox_color"
+                       type="color"
+                       format="hex"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_COLOR_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_COLOR_DESC"
+                       default="#000000"/>
 
                 <field name="backdrop_opacity"
                        type="number"
@@ -130,6 +134,15 @@
                        min="0"
                        max="100"
                        default="60"/>
+
+                <field name="middle_zone_action"
+                       type="list"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_MIDDLE_ZONE_ACTION_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_MIDDLE_ZONE_ACTION_DESC"
+                       default="none">
+                    <option value="none">PLG_CONTENT_DINKYGALLERY_PARAM_MIDDLE_ZONE_ACTION_NONE</option>
+                    <option value="close">PLG_CONTENT_DINKYGALLERY_PARAM_MIDDLE_ZONE_ACTION_CLOSE</option>
+                </field>
 
             </fieldset>
 

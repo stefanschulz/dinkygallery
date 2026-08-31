@@ -187,7 +187,20 @@ const lbState = {
     spinTimer: 0,
     sliding: false,
     pendingDir: 0,
+    fitImage: false,
 };
+
+/**
+ * In "image" frame-shape mode, retargets `--dg-lb-aspect` to a loaded image's own
+ * ratio so the frame morphs to hug it.
+ *
+ * @param {HTMLImageElement} img
+ */
+function applyImageAspect(img) {
+    if (lbState.fitImage && img.naturalWidth && img.naturalHeight) {
+        LB.el.style.setProperty('--dg-lb-aspect', img.naturalWidth + ' / ' + img.naturalHeight);
+    }
+}
 
 /**
  * The alt text for a card's image, or "".
@@ -279,6 +292,19 @@ function openLightbox(dg, startIndex, opener) {
     LB.el.style.setProperty('--dg-lb-rgb', dg.dataset.lbColor || '0, 0, 0');
     LB.el.style.setProperty('--dg-lb-padding', dg.dataset.lbPad || '10px');
 
+    // Frame shape: "viewport" (X vw × X vh), a fixed ratio, or "image" (per image).
+    const aspect = (dg.dataset.lbAspect || 'viewport').trim();
+
+    lbState.fitImage = aspect === 'image';
+    LB.el.classList.toggle('dg-lb--fitted', aspect !== 'viewport');
+    LB.el.classList.toggle('dg-lb--fit-image', lbState.fitImage);
+
+    if (aspect === 'viewport') {
+        LB.el.style.removeProperty('--dg-lb-aspect');
+    } else if (!lbState.fitImage) {
+        LB.el.style.setProperty('--dg-lb-aspect', aspect);
+    }
+
     const single = lbState.links.length <= 1;
 
     LB.prev.hidden = single;
@@ -343,6 +369,7 @@ function showLightboxImage(i) {
         LB.el.classList.remove('dg-lb--loading');
         LB.img.src = url;
         LB.img.alt = alt;
+        applyImageAspect(pre);
     };
     pre.src = url;
 
@@ -471,6 +498,7 @@ function slideToImage(i, dir) {
 
         LB.stage.appendChild(incoming);
         LB.img = incoming;
+        applyImageAspect(incoming); // in "image" mode: morph the frame while sliding
 
         // Forced reflow commits the start transform; then transition to rest. No
         // requestAnimationFrame — it is paused while the tab is not painting.

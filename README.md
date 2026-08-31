@@ -103,6 +103,9 @@ is a plain `<ul class="dg-plain">` list of linked images, no carousel, no assets
 
 ## Parameters
 
+The plugin edit screen groups these into three tabs — **Basic** (media source and
+carousel), **Lightbox**, and **Advanced**.
+
 **Basic**
 
 | parameter | default | what it does |
@@ -114,12 +117,18 @@ is a plain `<ul class="dg-plain">` list of linked images, no carousel, no assets
 | `card_aspect` | `4/3` | card image box — `4/3` · `3/2` · `1/1` · `16/9`, `object-fit: cover` |
 | `card_min` | `13rem` | a card never gets narrower than this; the strip shows fewer instead |
 | `card_gap` | `0` | CSS length between cards (a bare `0` is emitted as `0px`) |
-| `lightbox_size` | `100` | frame size as a percentage of the viewport (`X vw × X vh`) |
-| `lightbox_color` | `#000000` | base colour of the dimmed lightbox mat |
+| `lightbox_loop` | `yes` | wrap previous / next at the ends — the carousel arrows *and* the lightbox |
+
+**Lightbox**
+
+| parameter | default | what it does |
+|---|---|---|
+| `lightbox_aspect` | `viewport` | frame shape: `viewport` (X vw × X vh), a ratio (`4/3`, `3:2`, `1.5`) for a fixed shape on any screen, or `image` to hug each image |
+| `lightbox_size` | `100` | frame size as a percentage of the viewport |
 | `lightbox_padding` | `10px` | CSS length keeping the image off the frame edge |
-| `lightbox_loop` | `yes` | wrap previous / next at the ends |
-| `middle_zone_action` | `none` | what the middle third of the lightbox does — `none` / `close` |
+| `lightbox_color` | `#000000` | base colour of the dimmed lightbox mat |
 | `backdrop_opacity` | `60` | opacity of the lightbox mat, percent |
+| `middle_zone_action` | `none` | what the middle third of the lightbox does — `none` / `close` |
 
 **Advanced**
 

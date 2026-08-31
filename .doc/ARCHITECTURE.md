@@ -2,7 +2,7 @@
 
 Primary technical reference for developers and AI agents working on this codebase.
 
-**Version**: 1.3.0
+**Version**: 1.4.0
 **Last Updated**: August 2026
 
 ---
@@ -164,7 +164,7 @@ files — **keep them stable**.
 ```html
 <div class="dg" data-dg
      data-cards="3" data-size="100" data-loop="1" data-middle="none"
-     data-backdrop="60" data-lb-color="0, 0, 0" data-lb-pad="10px"
+     data-backdrop="60" data-lb-color="0, 0, 0" data-lb-pad="10px" data-lb-aspect="viewport"
      style="--dg-cards:3;--dg-gap:0px;--dg-aspect:4/3;--dg-card-min:13rem"
      role="group" aria-label="…">
   <button class="dg-arrow dg-arrow--prev" aria-label="…" hidden></button>
@@ -222,13 +222,23 @@ One `.dg-lb` element, built lazily on the first card click and reused. Structure
   `rgba(var(--dg-lb-rgb), var(--dg-backdrop))`; the backdrop is unpainted. A lightbox
   smaller than the viewport leaves the page around it clear; at `size=100` the frame
   covers everything.
-- **Sizing.** `width: calc(var(--dg-size) * 1vw)`, `height: calc(var(--dg-size) *
-  1vh)`, capped at the viewport. `.dg-lb__stage` is `inset: var(--dg-lb-padding)`
-  (image kept off the frame edge); each `.dg-lb__img` inside it is
-  `position:absolute; inset:0; margin:auto; max-width/height:100%; object-fit:contain`.
+- **Sizing.** `viewport` shape (default): `width: calc(var(--dg-size) * 1vw)`,
+  `height: calc(var(--dg-size) * 1vh)`, capped at the viewport. A fixed ratio or
+  `image` mode adds `.dg-lb--fitted`, which switches the frame to
+  `aspect-ratio: var(--dg-lb-aspect)` + `width: min(var(--dg-size)·1vw,
+  var(--dg-size)·1vh·(var(--dg-lb-aspect)))` — the largest box of that ratio inside
+  `size%` of the viewport on both axes. `image` mode also adds `.dg-lb--fit-image`
+  (a `width` transition) and `applyImageAspect()` retargets `--dg-lb-aspect` to each
+  loaded image's `naturalWidth / naturalHeight` (from `showLightboxImage`'s preload
+  and `slideToImage`'s incoming, so the frame morphs while sliding). `.dg-lb__stage`
+  is `inset: var(--dg-lb-padding)` (image off the frame edge); each `.dg-lb__img`
+  inside it is `position:absolute; inset:0; margin:auto; max-width/height:100%;
+  object-fit:contain`.
 - **Per-gallery config travels on `.dg`.** `openLightbox()` copies `data-size` →
   `--dg-size`, `data-backdrop` (percent) → `--dg-backdrop` (0–1), `data-lb-color`
-  (an `r, g, b` triplet) → `--dg-lb-rgb`, `data-lb-pad` → `--dg-lb-padding`.
+  (an `r, g, b` triplet) → `--dg-lb-rgb`, `data-lb-pad` → `--dg-lb-padding`,
+  `data-lb-aspect` → the `--fitted` / `--fit-image` classes (+ `--dg-lb-aspect` for a
+  fixed ratio).
 - **Zones.** Real `<button>`s, visually transparent, with a chevron that is dim by
   default, bright on hover and greyed (`opacity: .2`) while `disabled` — which happens
   at the respective end when `data-loop="0"` (also `aria-disabled`). Both zones are
@@ -266,7 +276,8 @@ One `.dg-lb` element, built lazily on the first card click and reused. Structure
 
 ## Configuration (`dinkygallery.xml` `<config>`)
 
-Two fieldsets: `basic` and `advanced`.
+Three fieldsets (admin tabs): `basic` (media source + carousel), `lightbox`, and
+`advanced`. The table below is in tab / field order.
 
 | parameter | type | default | consumed in |
 |---|---|---|---|
@@ -277,12 +288,13 @@ Two fieldsets: `basic` and `advanced`.
 | `card_aspect` | list | `4/3` | `--dg-aspect` via `cssAspect()` (option `aspect`) |
 | `card_min` | text | `13rem` | `--dg-card-min` |
 | `card_gap` | text | `0` | `--dg-gap` via `cssLength()` (option `gap`) |
+| `lightbox_loop` | radio 0/1 | `1` | `data-loop` — carousel arrows + lightbox nav (option `loop`) |
+| `lightbox_aspect` | text | `viewport` | `lightboxAspect()` → `data-lb-aspect` → `--dg-lb-*` classes / `--dg-lb-aspect` |
 | `lightbox_size` | number 10–100 | `100` | `data-size` → `--dg-size` (option `size`) |
-| `lightbox_color` | color (hex) | `#000000` | `hexToRgb()` → `data-lb-color` → `--dg-lb-rgb` |
 | `lightbox_padding` | text | `10px` | `cssLength(…, '10px')` → `data-lb-pad` → `--dg-lb-padding` |
-| `lightbox_loop` | radio 0/1 | `1` | `data-loop` (option `loop`) |
-| `middle_zone_action` | list `none`/`close` | `none` | `data-middle` (option `middle`) |
+| `lightbox_color` | color (hex) | `#000000` | `hexToRgb()` → `data-lb-color` → `--dg-lb-rgb` |
 | `backdrop_opacity` | number 0–100 | `60` | `data-backdrop` → `--dg-backdrop` |
+| `middle_zone_action` | list `none`/`close` | `none` | `data-middle` (option `middle`) |
 | `debug` | radio 0/1 | `0` | `DinkyGallery::debugComment()` |
 
 Every `PLG_CONTENT_DINKYGALLERY_*` key referenced by the XML must exist in **both**

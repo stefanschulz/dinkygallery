@@ -3,6 +3,26 @@
 All notable changes to `plg_content_dinkygallery` are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-08-31
+
+### Added
+- **`lightbox_aspect` parameter** — the frame's shape, within `lightbox_size`.
+  - `viewport` (default): `X vw` by `X vh` as before — no change to existing
+    installs.
+  - a ratio (`4/3`, `3:2`, `1.5`): the largest box of that fixed shape that
+    fits inside `lightbox_size` % of the viewport on **both** axes
+    (`width: min(X vw, X vh × ratio)` + `aspect-ratio`), the same on any screen.
+  - `image`: the frame takes each image's own ratio, so there is no mat; it
+    eases between shapes on navigation (instant under `prefers-reduced-motion`).
+
+### Changed
+- **Plugin admin: parameters regrouped.** The single Basic fieldset is split
+  into **Basic** (media source + carousel) and **Lightbox** tabs, with Advanced
+  unchanged. `lightbox_loop` stays under Basic — it also governs the carousel
+  arrows' wrap, not just the lightbox (its help text now says so). Lightbox tab
+  order: shape → size → padding → base colour → backdrop opacity → middle zone.
+  No stored value changes.
+
 ## [1.3.0] - 2026-08-31
 
 Lighthouse (Chrome, Navigation / Desktop) on an article page: Performance **97**,
