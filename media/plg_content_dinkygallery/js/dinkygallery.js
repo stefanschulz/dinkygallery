@@ -62,7 +62,7 @@ function initCarousel(dg) {
             link.appendChild(badge);
         }
 
-        badge.textContent = (index + 1) + ' / ' + cardCount;
+        badge.textContent = (index + 1) + ' / ' + cardCount;
     };
 
     let programmatic = false;
@@ -176,7 +176,7 @@ function t(key, fallback) {
     return (window.Joomla && Joomla.Text && Joomla.Text._) ? Joomla.Text._(key, fallback) : fallback;
 }
 
-/** @type {{el:HTMLElement, frame:HTMLElement, img:HTMLImageElement, backdrop:HTMLElement, prev:HTMLButtonElement, mid:HTMLButtonElement, next:HTMLButtonElement, close:HTMLButtonElement}|null} */
+/** @type {{el:HTMLElement, frame:HTMLElement, stage:HTMLElement, img:HTMLImageElement, backdrop:HTMLElement, prev:HTMLButtonElement, mid:HTMLButtonElement, next:HTMLButtonElement, close:HTMLButtonElement, count:HTMLElement, status:HTMLElement}|null} */
 let LB = null;
 
 const lbState = {
@@ -185,7 +185,20 @@ const lbState = {
     loop: true,
     opener: /** @type {HTMLElement|null} */ (null),
     spinTimer: 0,
+    sliding: false,
 };
+
+/**
+ * The alt text for a card's image, or "".
+ *
+ * @param {HTMLElement} link  A .dg-card__link.
+ * @returns {string}
+ */
+function altOf(link) {
+    const im = link.querySelector('.dg-card__img');
+
+    return im ? (im.getAttribute('alt') || '') : '';
+}
 
 /**
  * Builds the single lightbox element, appends it to <body>, wires its events.
@@ -203,7 +216,7 @@ function buildLightbox() {
     el.innerHTML =
         '<div class="dg-lb__backdrop" data-dg-close></div>'
         + '<div class="dg-lb__frame">'
-        + '<img class="dg-lb__img" alt="">'
+        + '<div class="dg-lb__stage"><img class="dg-lb__img" alt=""></div>'
         + '<button type="button" class="dg-lb__zone dg-lb__zone--prev"></button>'
         + '<button type="button" class="dg-lb__zone dg-lb__zone--mid" hidden></button>'
         + '<button type="button" class="dg-lb__zone dg-lb__zone--next"></button>'
@@ -217,6 +230,7 @@ function buildLightbox() {
     const refs = {
         el,
         frame: el.querySelector('.dg-lb__frame'),
+        stage: el.querySelector('.dg-lb__stage'),
         img: el.querySelector('.dg-lb__img'),
         backdrop: el.querySelector('.dg-lb__backdrop'),
         prev: el.querySelector('.dg-lb__zone--prev'),
@@ -308,19 +322,16 @@ function setBackgroundInert(on) {
 }
 
 /**
- * Shows image i: preloads it (keeping the previous one visible until it is ready),
- * updates alt, preloads the neighbours, and refreshes the zone disabled state.
+ * Swaps the visible image to index i in place: preloads it (the previous one stays
+ * visible until it is ready, spinner after 150 ms), then applies the state. Used on
+ * open and whenever motion is reduced.
  *
  * @param {number} i  Target index.
  */
 function showLightboxImage(i) {
-    const n = lbState.links.length;
-
-    lbState.index = i;
-
     const link = lbState.links[i];
     const url = link.dataset.full || link.getAttribute('href');
-    const alt = link.querySelector('.dg-card__img') ? link.querySelector('.dg-card__img').getAttribute('alt') || '' : '';
+    const alt = altOf(link);
 
     window.clearTimeout(lbState.spinTimer);
     lbState.spinTimer = window.setTimeout(() => LB.el.classList.add('dg-lb--loading'), 150);
@@ -333,6 +344,20 @@ function showLightboxImage(i) {
         LB.img.alt = alt;
     };
     pre.src = url;
+
+    applyImageState(i);
+}
+
+/**
+ * Non-visual bookkeeping for landing on index i: current index, neighbour preload,
+ * zone disabled state, and the position pill + live region.
+ *
+ * @param {number} i  Target index.
+ */
+function applyImageState(i) {
+    const n = lbState.links.length;
+
+    lbState.index = i;
 
     [i + 1, i - 1].forEach((j) => {
         const k = lbState.loop ? (j + n) % n : j;
@@ -350,9 +375,8 @@ function showLightboxImage(i) {
     LB.prev.setAttribute('aria-disabled', String(LB.prev.disabled));
     LB.next.setAttribute('aria-disabled', String(LB.next.disabled));
 
-    // Position: a visible "3 / 12" pill, and a spoken "Image 3 of 12".
     LB.count.hidden = n <= 1;
-    LB.count.textContent = (i + 1) + ' / ' + n;
+    LB.count.textContent = (i + 1) + ' / ' + n;
     LB.status.textContent = t('PLG_CONTENT_DINKYGALLERY_ARIA_POSITION', 'Image {current} of {total}')
         .replace('{current}', String(i + 1))
         .replace('{total}', String(n));
@@ -366,7 +390,7 @@ function showLightboxImage(i) {
 function navLightbox(dir) {
     const n = lbState.links.length;
 
-    if (n <= 1) {
+    if (n <= 1 || lbState.sliding) {
         return;
     }
 
@@ -378,7 +402,92 @@ function navLightbox(dir) {
         return;
     }
 
-    showLightboxImage(i);
+    if (REDUCED_MOTION) {
+        showLightboxImage(i);
+    } else {
+        slideToImage(i, dir);
+    }
+}
+
+/**
+ * Slides image i in from the side given by `dir` and the current one out the other
+ * way: a second `.dg-lb__img` is appended, its start transform committed, then both
+ * animate. Falls back to an in-place state apply if closed mid-slide.
+ *
+ * @param {number} i    Target index.
+ * @param {number} dir  -1 (enter from the left) or +1 (enter from the right).
+ */
+function slideToImage(i, dir) {
+    const link = lbState.links[i];
+    const url = link.dataset.full || link.getAttribute('href');
+    const outgoing = LB.img;
+    const shift = LB.stage.clientWidth || LB.frame.clientWidth || 1000;
+
+    const incoming = new Image();
+    incoming.className = 'dg-lb__img';
+    incoming.alt = altOf(link);
+    incoming.style.transform = 'translateX(' + (dir * shift) + 'px)';
+
+    lbState.sliding = true;
+    window.clearTimeout(lbState.spinTimer);
+    lbState.spinTimer = window.setTimeout(() => LB.el.classList.add('dg-lb--loading'), 150);
+
+    let started = false;
+    const begin = () => {
+        if (started) {
+            return;
+        }
+
+        started = true;
+        window.clearTimeout(lbState.spinTimer);
+        LB.el.classList.remove('dg-lb--loading');
+
+        if (LB.el.hidden) {
+            lbState.sliding = false;
+
+            return;
+        }
+
+        LB.stage.appendChild(incoming);
+        LB.img = incoming;
+
+        // Forced reflow commits the start transform; then transition to rest. No
+        // requestAnimationFrame — it is paused while the tab is not painting.
+        void incoming.offsetWidth;
+
+        LB.stage.classList.add('dg-lb__stage--sliding');
+        outgoing.style.transform = 'translateX(' + (-dir * shift) + 'px)';
+        incoming.style.transform = 'translateX(0)';
+
+        let done = false;
+        const finish = () => {
+            if (done) {
+                return;
+            }
+
+            done = true;
+            window.clearTimeout(fallback);
+            incoming.removeEventListener('transitionend', finish);
+            outgoing.remove();
+            LB.stage.classList.remove('dg-lb__stage--sliding');
+            incoming.style.transform = '';
+            lbState.sliding = false;
+
+            if (!LB.el.hidden) {
+                applyImageState(i);
+            }
+        };
+
+        const fallback = window.setTimeout(finish, 450);
+        incoming.addEventListener('transitionend', finish);
+    };
+
+    incoming.onload = incoming.onerror = begin;
+    incoming.src = url;
+
+    if (incoming.complete) {
+        begin();
+    }
 }
 
 /**
@@ -394,9 +503,19 @@ function closeLightbox() {
 
     const finish = () => {
         LB.el.hidden = true;
-        LB.img.removeAttribute('src');
         unlockScroll();
         setBackgroundInert(false);
+
+        // Collapse any in-flight slide back to a single, reset image.
+        lbState.sliding = false;
+        LB.stage.classList.remove('dg-lb__stage--sliding');
+        LB.stage.querySelectorAll('.dg-lb__img').forEach((im) => {
+            if (im !== LB.img) {
+                im.remove();
+            }
+        });
+        LB.img.style.transform = '';
+        LB.img.removeAttribute('src');
 
         if (lbState.opener) {
             lbState.opener.focus();

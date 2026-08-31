@@ -201,7 +201,8 @@ clamped) and its number rewritten.
 
 One `.dg-lb` element, built lazily on the first card click and reused. Structure:
 `.dg-lb__backdrop[data-dg-close]` (transparent full-viewport click catcher) +
-`.dg-lb__frame` (the dimmed, fixed-size mat) containing `.dg-lb__img`, three
+`.dg-lb__frame` (the dimmed, fixed-size mat) containing `.dg-lb__stage`
+(`overflow:hidden`, inset by the padding) with the `.dg-lb__img`(s), three
 `.dg-lb__zone` buttons (`--prev` / `--mid` / `--next`), `.dg-lb__close` and
 `.dg-lb__count` (the visible `3 / 12` pill); plus a visually-hidden
 `.dg-lb__status[role=status][aria-live=polite]` as a sibling of the frame.
@@ -211,9 +212,9 @@ One `.dg-lb` element, built lazily on the first card click and reused. Structure
   smaller than the viewport leaves the page around it clear; at `size=100` the frame
   covers everything.
 - **Sizing.** `width: calc(var(--dg-size) * 1vw)`, `height: calc(var(--dg-size) *
-  1vh)`, capped at the viewport. The image is `position:absolute; inset:
-  var(--dg-lb-padding); max-width/height: calc(100% - 2 * var(--dg-lb-padding));
-  object-fit: contain` — fitted by ratio, kept off the edge.
+  1vh)`, capped at the viewport. `.dg-lb__stage` is `inset: var(--dg-lb-padding)`
+  (image kept off the frame edge); each `.dg-lb__img` inside it is
+  `position:absolute; inset:0; margin:auto; max-width/height:100%; object-fit:contain`.
 - **Per-gallery config travels on `.dg`.** `openLightbox()` copies `data-size` →
   `--dg-size`, `data-backdrop` (percent) → `--dg-backdrop` (0–1), `data-lb-color`
   (an `r, g, b` triplet) → `--dg-lb-rgb`, `data-lb-pad` → `--dg-lb-padding`.
@@ -229,10 +230,18 @@ One `.dg-lb` element, built lazily on the first card click and reused. Structure
   close. `role="dialog"`, `aria-modal="true"`.
 - **Scroll lock.** `<html>` gets `overflow:hidden` plus a `padding-right` equal to the
   scrollbar width, restored on close.
-- **Image swap.** The incoming image is loaded via `new Image()`; the visible one stays
-  until it is ready; a spinner + opacity dip appears after 150 ms; both neighbours are
-  then preloaded. A card's full image is also warmed on `pointerover` / `focusin`
-  (once per URL), so opening the lightbox is usually instant.
+- **Image swap.** On open / reduced motion, `showLightboxImage()` loads the new image
+  via `new Image()`, keeps the old one visible until it is ready (spinner + opacity
+  dip after 150 ms), then swaps `src`. `applyImageState()` does the non-visual part
+  (index, neighbour preload, zone state, count / status) and is shared by both paths.
+  A card's full image is also warmed on `pointerover` / `focusin` (once per URL).
+- **Slide.** `slideToImage(i, dir)` (prev/next when motion is not reduced) appends a
+  second `.dg-lb__img` translated `±stage-width`, forces a reflow, adds
+  `.dg-lb__stage--sliding` (`transition: transform 280ms`) and moves the outgoing one
+  out / the incoming one to 0. On `transitionend` (or a 450 ms fallback) the old
+  image is removed and `applyImageState()` runs. `lbState.sliding` blocks re-entry;
+  `closeLightbox()` collapses an in-flight slide. No `requestAnimationFrame` — it is
+  paused while the tab is not painting, which would strand the slide.
 - **Position.** `.dg-lb__count` shows `i+1 / n` (hidden for `n === 1`); `.dg-lb__status`
   gets "Image i+1 of n" from `PLG_CONTENT_DINKYGALLERY_ARIA_POSITION` for the live
   region — both updated on every swap.

@@ -266,17 +266,29 @@
     background: rgba(var(--dg-lb-rgb, 0, 0, 0), var(--dg-backdrop, 0.6));
 }
 
+/* The image area: inset by the padding, clips the sliding images. */
+.dg-lb__stage {
+    position: absolute;
+    inset: var(--dg-lb-padding, 10px);
+    overflow: hidden;
+}
+
 .dg-lb__img {
     position: absolute;
-    inset: var(--dg-lb-padding, 10px); /* keep the image clear of the frame edge */
+    inset: 0;
     margin: auto;
     display: block;
-    max-width: calc(100% - 2 * var(--dg-lb-padding, 10px));
-    max-height: calc(100% - 2 * var(--dg-lb-padding, 10px));
+    max-width: 100%;
+    max-height: 100%;
     width: auto;
     height: auto;
     object-fit: contain; /* fitted by ratio inside the fixed frame — requirement 4 */
     transition: opacity 120ms ease;
+}
+
+/* Prev/next slide: the script sets translateX on the outgoing + incoming image. */
+.dg-lb__stage--sliding .dg-lb__img {
+    transition: transform 280ms ease;
 }
 
 /* "3 / 12" counter, centred on the frame's bottom edge. */
@@ -466,6 +478,7 @@
     .dg-arrow,
     .dg-lb,
     .dg-lb__img,
+    .dg-lb__stage--sliding .dg-lb__img,
     .dg-lb__zone--prev::before,
     .dg-lb__zone--next::before {
         transition: none;

@@ -75,8 +75,9 @@ image is fitted by aspect ratio (`contain`) inside a fixed-size frame
 (`lightbox_size` % of the viewport). Navigation: the **left third** of the frame is
 "previous", the **right third** is "next"; the **middle third** does nothing unless
 `middle_zone_action` / `middle=` is `close`. It closes on the **×** (top-right), on a
-click **outside the frame**, and on **Esc**; `←` / `→` navigate; focus is trapped in
-the dialog and returns to the card on close.
+click **outside the frame**, and on **Esc**; `←` / `→` navigate (with a slide
+transition — instant under *reduce motion*); focus is trapped in the dialog and
+returns to the card on close.
 
 Only the frame is dimmed (`lightbox_color` at `backdrop_opacity` %): a lightbox smaller
 than the viewport leaves the page around it clear. A `3 / 12` position counter sits on

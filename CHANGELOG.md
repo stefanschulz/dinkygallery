@@ -6,6 +6,12 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- **Lightbox slide.** Prev / next now slides the image: a second `.dg-lb__img`
+  is appended inside a new clipping `.dg-lb__stage`, the outgoing one leaves
+  toward the opposite edge (280 ms). Falls back to the in-place swap under
+  `prefers-reduced-motion: reduce`; a click during a slide is ignored; a close
+  mid-slide collapses cleanly. The transition is kicked with a forced reflow,
+  not `requestAnimationFrame` (which is paused while the tab is not painting).
 - **Position indicator.** A centred `i / N` pill that rides the first visible
   carousel card and shows that card's position (server-rendered as `1 / N` on the
   first card for the no-JS baseline, then moved and updated by the script on
