@@ -91,6 +91,20 @@
                        max="100"
                        default="100"/>
 
+                <field name="lightbox_color"
+                       type="color"
+                       format="hex"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_COLOR_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_COLOR_DESC"
+                       default="#000000"/>
+
+                <field name="lightbox_padding"
+                       type="text"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_PADDING_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_PADDING_DESC"
+                       hint="10px"
+                       default="10px"/>
+
                 <field name="lightbox_loop"
                        type="radio"
                        label="PLG_CONTENT_DINKYGALLERY_PARAM_LIGHTBOX_LOOP_LABEL"

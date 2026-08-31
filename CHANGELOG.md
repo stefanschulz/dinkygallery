@@ -6,6 +6,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- `lightbox_color` (colour field, default `#000000`) and `lightbox_padding`
+  (CSS length, default `10px`) parameters. The frame mat is now
+  `rgba(var(--dg-lb-rgb), var(--dg-backdrop))` — the base colour is
+  configurable, the backdrop opacity still applies on top. The image is inset
+  from the frame edge by `--dg-lb-padding` (`inset` + `max-width/height:
+  calc(100% - 2 * pad)`), so it never touches the edge. Both travel to the
+  shared lightbox as `data-lb-color` / `data-lb-pad` on `.dg`, like the other
+  lightbox settings. Hex is parsed to an `r, g, b` triplet; a non-length
+  padding falls back to `10px`.
 - Slice 4 — lightbox (CSS + JS):
   - one `.dg-lb` element, built on the first card click and reused. Fixed,
     full-viewport. The dim sits on the **frame** itself

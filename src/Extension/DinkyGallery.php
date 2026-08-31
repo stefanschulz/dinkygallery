@@ -199,6 +199,8 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
                         'aspect'   => $config['card_aspect'],
                         'card_min' => $config['card_min'],
                         'backdrop' => $config['backdrop_opacity'],
+                        'lb_color' => $config['lightbox_rgb'],
+                        'lb_pad'   => $config['lightbox_padding'],
                     ],
                     $labels
                 )
@@ -239,6 +241,8 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
             'card_aspect'      => (string) $params->get('card_aspect', '4/3'),
             'card_min'         => trim((string) $params->get('card_min', '13rem')) ?: '13rem',
             'backdrop_opacity' => (int) $params->get('backdrop_opacity', 60),
+            'lightbox_rgb'     => $this->hexToRgb((string) $params->get('lightbox_color', '#000000')),
+            'lightbox_padding' => $this->cssLength((string) $params->get('lightbox_padding', '10px'), '10px'),
             'options'          => [
                 'folder' => '',
                 'cards'  => (int) $params->get('visible_cards', 3),
@@ -262,17 +266,46 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
      *
      * @since   1.0.0
      */
-    private function cssLength(string $raw): string
+    private function cssLength(string $raw, string $fallback = '0px'): string
     {
         $raw = trim($raw);
 
-        // "0" must go out as "0px": a unitless zero makes "100% - (n-1)*var(--dg-gap)"
-        // an invalid calc() (percentage minus number) and the card sizing collapses.
-        if ($raw === '' || $raw === '0') {
+        if ($raw === '') {
+            return $fallback;
+        }
+
+        // "0" goes out as "0px": a unitless zero makes "100% - (n-1)*var(--dg-gap)"
+        // an invalid calc() (percentage minus number) and the sizing collapses.
+        if ($raw === '0') {
             return '0px';
         }
 
-        return preg_match('/^\d*\.?\d+(px|rem|em|%|vw|vh|vmin|vmax|ch)$/', $raw) === 1 ? $raw : '0px';
+        return preg_match('/^\d*\.?\d+(px|rem|em|%|vw|vh|vmin|vmax|ch)$/', $raw) === 1 ? $raw : $fallback;
+    }
+
+    /**
+     * Converts a "#rgb" / "#rrggbb" colour to a "r, g, b" triplet for use inside
+     * rgba(). Falls back to black on anything unparseable.
+     *
+     * @param   string  $hex  The colour value from the color field.
+     *
+     * @return  string
+     *
+     * @since   1.0.0
+     */
+    private function hexToRgb(string $hex): string
+    {
+        $hex = ltrim(trim($hex), '#');
+
+        if (preg_match('/^[0-9a-fA-F]{3}$/', $hex)) {
+            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
+        }
+
+        if (!preg_match('/^[0-9a-fA-F]{6}$/', $hex)) {
+            return '0, 0, 0';
+        }
+
+        return hexdec(substr($hex, 0, 2)) . ', ' . hexdec(substr($hex, 2, 2)) . ', ' . hexdec(substr($hex, 4, 2));
     }
 
     /**

@@ -87,6 +87,8 @@ nachgezogen — Default `0`):
 | `card_min` | `text` | `13rem` |
 | `card_gap` | `text` (CSS-Länge; Override `gap=`) | `0` |
 | `lightbox_size` | `number` (1–100) | `100` |
+| `lightbox_color` | `color` (hex) | `#000000` |
+| `lightbox_padding` | `text` (CSS-Länge) | `10px` |
 | `lightbox_loop` | `radio` switcher (0/1) | `1` (yes) |
 | `middle_zone_action` | `list` (`none`·`close`) | `none` |
 | `backdrop_opacity` | `number` (0–100) | `60` |

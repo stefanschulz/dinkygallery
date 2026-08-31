@@ -28,7 +28,7 @@ final class Render
      * Renders the in-article carousel.
      *
      * @param   list<array{url:string, alt:string, w:?int, h:?int}>  $images  Image list.
-     * @param   array{cards:mixed, size:mixed, loop:mixed, middle:mixed, gap:string, aspect:string, card_min:string, backdrop:int}  $o  Resolved options.
+     * @param   array{cards:mixed, size:mixed, loop:mixed, middle:mixed, gap:string, aspect:string, card_min:string, backdrop:int, lb_color:string, lb_pad:string}  $o  Resolved options.
      * @param   array{carousel:string, prev:string, next:string}  $labels  Translated ARIA labels.
      *
      * @return  string
@@ -51,6 +51,7 @@ final class Render
 
         $html = '<div class="dg" data-dg data-cards="' . $cards . '" data-size="' . $size . '"'
             . ' data-loop="' . $loop . '" data-middle="' . $middle . '" data-backdrop="' . (int) $o['backdrop'] . '"'
+            . ' data-lb-color="' . self::e($o['lb_color']) . '" data-lb-pad="' . self::e($o['lb_pad']) . '"'
             . ' ' . $style . ' role="group" aria-label="' . self::e($labels['carousel']) . '">';
 
         $html .= '<button type="button" class="dg-arrow dg-arrow--prev" aria-label="' . self::e($labels['prev']) . '" hidden></button>';

@@ -218,6 +218,8 @@ function openLightbox(dg, startIndex, opener) {
 
     LB.el.style.setProperty('--dg-size', Number.isFinite(size) ? size : 100);
     LB.el.style.setProperty('--dg-backdrop', (Number.isFinite(backdrop) ? backdrop : 60) / 100);
+    LB.el.style.setProperty('--dg-lb-rgb', dg.dataset.lbColor || '0, 0, 0');
+    LB.el.style.setProperty('--dg-lb-padding', dg.dataset.lbPad || '10px');
 
     const single = lbState.links.length <= 1;
 
