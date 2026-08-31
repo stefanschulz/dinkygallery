@@ -11,6 +11,7 @@
         <property name="archive" value="${package}-${version}.zip"/>
         <property name="releasePath" value="${releaseFolder}/${archive}"/>
         <property name="updatePath" value="${releaseFolder}/update.xml"/>
+        <mkdir dir="${releaseFolder}"/>
         <delete file="${releasePath}" quiet="true"/>
         <zip destfile="${releasePath}">
             <fileset dir="." defaultexcludes="true">
