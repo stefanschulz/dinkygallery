@@ -27,8 +27,8 @@ final class Render
     /**
      * Renders the in-article carousel.
      *
-     * @param   list<array{url:string, alt:string, w:?int, h:?int}>  $images  Image list.
-     * @param   array{cards:mixed, size:mixed, loop:mixed, middle:mixed, gap:string, aspect:string, card_min:string, backdrop:int, lb_color:string, lb_pad:string, lb_aspect:string}  $o  Resolved options.
+     * @param   list<array{url:string, src:string, srcset:string, full:string, alt:string, w:?int, h:?int}>  $images  Image list.
+     * @param   array{cards:mixed, size:mixed, loop:mixed, middle:mixed, gap:string, aspect:string, sizes:string, card_min:string, backdrop:int, lb_color:string, lb_pad:string, lb_aspect:string}  $o  Resolved options.
      * @param   array{carousel:string, prev:string, next:string}  $labels  Translated ARIA labels.
      *
      * @return  string
@@ -60,9 +60,14 @@ final class Render
 
         $total = \count($images);
 
+        $sizes = trim((string) ($o['sizes'] ?? '')) !== '' ? ' sizes="' . self::e((string) $o['sizes']) . '"' : '';
+
         foreach ($images as $i => $img) {
-            $url  = self::e($img['url']);
-            $dims = ($img['w'] && $img['h']) ? ' data-w="' . (int) $img['w'] . '" data-h="' . (int) $img['h'] . '"' : '';
+            $src  = self::e($img['src'] ?? $img['url']);
+            $full = self::e($img['full'] ?? $img['url']);
+            $set  = trim((string) ($img['srcset'] ?? '')) !== ''
+                ? ' srcset="' . self::e($img['srcset']) . '"' . $sizes
+                : '';
             $wh   = ($img['w'] && $img['h']) ? ' width="' . (int) $img['w'] . '" height="' . (int) $img['h'] . '"' : '';
 
             // A "1 / N" count sits on the first card (no-JS baseline); the script
@@ -72,8 +77,8 @@ final class Render
                 : '';
 
             $html .= '<li class="dg-card">'
-                . '<a class="dg-card__link" href="' . $url . '" data-full="' . $url . '"' . $dims . '>'
-                . '<img class="dg-card__img" src="' . $url . '" alt="' . self::e($img['alt']) . '"'
+                . '<a class="dg-card__link" href="' . $full . '" data-full="' . $full . '">'
+                . '<img class="dg-card__img" src="' . $src . '" alt="' . self::e($img['alt']) . '"' . $set
                 . ' loading="lazy" decoding="async"' . $wh . '>'
                 . $count
                 . '</a></li>';

@@ -4,8 +4,8 @@
  * GNU General Public License version 3 or later; see LICENSE.txt
  *
  * Class / data-* names are the contract shared with dinkygallery.js and the
- * server-rendered markup — keep them stable. See .doc/WORKPLAN.md §7.
- * Slice 3: carousel. Slice 4 adds the lightbox block.
+ * server-rendered markup (Render.php) — keep them stable. Two blocks: the
+ * in-article carousel, then the lightbox.
  */
 
 /* ------------------------------------------------------------------ carousel */

@@ -7,7 +7,7 @@
     <license>GNU General Public License version 3 or later; see LICENSE.txt</license>
     <authorEmail>schulz@the-loom.de</authorEmail>
     <authorUrl>https://www.the-loom.de</authorUrl>
-    <version>1.4.0</version>
+    <version>1.5.0</version>
     <description>PLG_CONTENT_DINKYGALLERY_XML_DESCRIPTION</description>
 
     <namespace path="src">TheLoom\Plugin\Content\DinkyGallery</namespace>
@@ -142,6 +142,67 @@
                        default="none">
                     <option value="none">PLG_CONTENT_DINKYGALLERY_PARAM_MIDDLE_ZONE_ACTION_NONE</option>
                     <option value="close">PLG_CONTENT_DINKYGALLERY_PARAM_MIDDLE_ZONE_ACTION_CLOSE</option>
+                </field>
+
+            </fieldset>
+
+            <fieldset name="thumbnails"
+                      label="PLG_CONTENT_DINKYGALLERY_FIELDSET_THUMBNAILS_LABEL"
+                      description="PLG_CONTENT_DINKYGALLERY_FIELDSET_THUMBNAILS_DESC">
+
+                <field name="thumbnails"
+                       type="radio"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_THUMBNAILS_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_THUMBNAILS_DESC"
+                       layout="joomla.form.field.radio.switcher"
+                       default="1">
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
+                </field>
+
+                <field name="thumb_dir"
+                       type="text"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_THUMB_DIR_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_THUMB_DIR_DESC"
+                       hint=".thumbs"
+                       default=".thumbs"
+                       showon="thumbnails:1"/>
+
+                <field name="thumb_widths"
+                       type="text"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_THUMB_WIDTHS_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_THUMB_WIDTHS_DESC"
+                       hint="480,768,1024,1600"
+                       default="480,768,1024,1600"
+                       showon="thumbnails:1"/>
+
+                <field name="thumb_large"
+                       type="number"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_THUMB_LARGE_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_THUMB_LARGE_DESC"
+                       min="0"
+                       max="6000"
+                       default="1920"
+                       showon="thumbnails:1"/>
+
+                <field name="thumb_quality"
+                       type="number"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_THUMB_QUALITY_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_THUMB_QUALITY_DESC"
+                       min="1"
+                       max="100"
+                       default="82"
+                       showon="thumbnails:1"/>
+
+                <field name="thumb_prune"
+                       type="radio"
+                       label="PLG_CONTENT_DINKYGALLERY_PARAM_THUMB_PRUNE_LABEL"
+                       description="PLG_CONTENT_DINKYGALLERY_PARAM_THUMB_PRUNE_DESC"
+                       layout="joomla.form.field.radio.switcher"
+                       default="1"
+                       showon="thumbnails:1">
+                    <option value="0">JNO</option>
+                    <option value="1">JYES</option>
                 </field>
 
             </fieldset>

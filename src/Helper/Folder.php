@@ -24,6 +24,11 @@ use Joomla\CMS\Uri\Uri;
  * rejected (resolve() returns null and getError() explains why). getimagesize() is
  * cached per request across every gallery on the page.
  *
+ * When a Thumbnailer is supplied, each listed image also carries a "src" (a mid-size
+ * copy for the no-srcset fallback), a "srcset" string and a "full" URL (a size-capped
+ * copy for the lightbox); the cache subfolder is pruned of stale derivatives after a
+ * full-folder listing.
+ *
  * @since  1.0.0
  */
 final class Folder
@@ -45,6 +50,38 @@ final class Folder
     private array $extensions;
 
     /**
+     * Thumbnail generator, or null when thumbnailing is off / GD is unavailable.
+     *
+     * @var    Thumbnailer|null
+     * @since  1.5.0
+     */
+    private ?Thumbnailer $thumbs;
+
+    /**
+     * Target widths for the card srcset, ascending.
+     *
+     * @var    list<int>
+     * @since  1.5.0
+     */
+    private array $thumbWidths;
+
+    /**
+     * Long-edge cap for the lightbox "large" derivative; 0 = use the original.
+     *
+     * @var    integer
+     * @since  1.5.0
+     */
+    private int $thumbLarge;
+
+    /**
+     * Whether to delete stale derivatives from a folder's cache after listing it.
+     *
+     * @var    boolean
+     * @since  1.5.0
+     */
+    private bool $thumbPrune;
+
+    /**
      * Why the last resolve() call returned null.
      *
      * @var    string
@@ -61,15 +98,29 @@ final class Folder
     private array $sizeCache = [];
 
     /**
-     * @param   string    $baseDirectory  The base_directory parameter value.
-     * @param   string[]  $extensions     Allowed image extensions (lower-case, no dot).
+     * @param   string            $baseDirectory  The base_directory parameter value.
+     * @param   string[]          $extensions     Allowed image extensions (lower-case, no dot).
+     * @param   Thumbnailer|null  $thumbs         Derivative generator, or null to serve originals.
+     * @param   list<int>         $thumbWidths    Card srcset widths in pixels.
+     * @param   integer           $thumbLarge     Lightbox long-edge cap; 0 = original.
+     * @param   boolean           $thumbPrune     Delete stale derivatives after a folder listing.
      *
      * @since   1.0.0
      */
-    public function __construct(string $baseDirectory, array $extensions)
-    {
-        $this->base       = trim(str_replace('\\', '/', $baseDirectory), '/');
-        $this->extensions = $extensions;
+    public function __construct(
+        string $baseDirectory,
+        array $extensions,
+        ?Thumbnailer $thumbs = null,
+        array $thumbWidths = [],
+        int $thumbLarge = 0,
+        bool $thumbPrune = true
+    ) {
+        $this->base        = trim(str_replace('\\', '/', $baseDirectory), '/');
+        $this->extensions  = $extensions;
+        $this->thumbs      = $thumbs;
+        $this->thumbWidths = $thumbWidths;
+        $this->thumbLarge  = max(0, $thumbLarge);
+        $this->thumbPrune  = $thumbPrune;
     }
 
     /**
@@ -149,7 +200,7 @@ final class Folder
      * @param   string  $relBase   Site-root-relative path of the folder (for URLs).
      * @param   string  $sort      "asc" or "desc" (natural, by filename).
      *
-     * @return  list<array{url:string, alt:string, w:?int, h:?int}>
+     * @return  list<array{url:string, src:string, srcset:string, full:string, alt:string, w:?int, h:?int}>
      *
      * @since   1.0.0
      */
@@ -182,17 +233,32 @@ final class Folder
 
         $urlBase = rtrim(Uri::root(true), '/') . '/' . $this->encodePath(trim(str_replace('\\', '/', $relBase), '/'));
 
-        $out = [];
+        $out  = [];
+        $keep = [];
 
         foreach ($files as $name) {
-            $size = $this->size($absPath . \DIRECTORY_SEPARATOR . $name);
+            $absFile = $absPath . \DIRECTORY_SEPARATOR . $name;
+            $size    = $this->size($absFile);
+            $url     = $urlBase . '/' . rawurlencode($name);
 
-            $out[] = [
-                'url' => $urlBase . '/' . rawurlencode($name),
-                'alt' => pathinfo($name, \PATHINFO_FILENAME),
-                'w'   => $size[0] ?? null,
-                'h'   => $size[1] ?? null,
-            ];
+            $out[] = $this->withThumbs(
+                [
+                    'url'    => $url,
+                    'src'    => $url,
+                    'srcset' => '',
+                    'full'   => $url,
+                    'alt'    => pathinfo($name, \PATHINFO_FILENAME),
+                    'w'      => $size[0] ?? null,
+                    'h'      => $size[1] ?? null,
+                ],
+                $absFile,
+                $urlBase,
+                $keep
+            );
+        }
+
+        if ($this->thumbs !== null && $this->thumbPrune) {
+            $this->thumbs->prune($absPath . \DIRECTORY_SEPARATOR . $this->thumbs->dirName(), $keep);
         }
 
         return $out;
@@ -205,25 +271,108 @@ final class Folder
      * @param   string  $absFile  Absolute path from resolve().
      * @param   string  $relFile  Site-root-relative path of the file (for the URL).
      *
-     * @return  list<array{url:string, alt:string, w:?int, h:?int}>
+     * @return  list<array{url:string, src:string, srcset:string, full:string, alt:string, w:?int, h:?int}>
      *
      * @since   1.2.0
      */
     public function single(string $absFile, string $relFile): array
     {
-        $rel  = trim(str_replace('\\', '/', $relFile), '/');
+        $rel   = trim(str_replace('\\', '/', $relFile), '/');
         $slash = strrpos($rel, '/');
-        $dir  = $slash === false ? '' : substr($rel, 0, $slash);
-        $file = $slash === false ? $rel : substr($rel, $slash + 1);
-        $size = $this->size($absFile);
+        $dir   = $slash === false ? '' : substr($rel, 0, $slash);
+        $file  = $slash === false ? $rel : substr($rel, $slash + 1);
+        $size  = $this->size($absFile);
 
-        return [[
-            'url' => rtrim(Uri::root(true), '/') . '/'
-                . ($dir === '' ? '' : $this->encodePath($dir) . '/') . rawurlencode($file),
-            'alt' => pathinfo($file, \PATHINFO_FILENAME),
-            'w'   => $size[0] ?? null,
-            'h'   => $size[1] ?? null,
-        ]];
+        $root   = rtrim(Uri::root(true), '/');
+        $dirUrl = $dir === '' ? $root : $root . '/' . $this->encodePath($dir);
+        $url    = $dirUrl . '/' . rawurlencode($file);
+        $keep   = [];
+
+        // A single-file gallery shares its .thumbs folder with sibling images, so it
+        // never prunes.
+        return [$this->withThumbs(
+            [
+                'url'    => $url,
+                'src'    => $url,
+                'srcset' => '',
+                'full'   => $url,
+                'alt'    => pathinfo($file, \PATHINFO_FILENAME),
+                'w'      => $size[0] ?? null,
+                'h'      => $size[1] ?? null,
+            ],
+            $absFile,
+            $dirUrl,
+            $keep
+        )];
+    }
+
+    /**
+     * Adds "src" / "srcset" / "full" to an image entry from generated derivatives, and
+     * records the derivative file names in $keep for the prune pass. A no-op (entry
+     * returned unchanged) when there is no Thumbnailer or the source cannot be read.
+     *
+     * @param   array<string,mixed>  $entry    The base image entry (url/src/srcset/full/alt/w/h).
+     * @param   string               $absFile  Absolute path of the source image.
+     * @param   string               $dirUrl   URL of the folder holding the source (no trailing slash).
+     * @param   array<string>        $keep     Collected derivative file names (by reference).
+     *
+     * @return  array<string,mixed>
+     *
+     * @since   1.5.0
+     */
+    private function withThumbs(array $entry, string $absFile, string $dirUrl, array &$keep): array
+    {
+        if ($this->thumbs === null || !$entry['w'] || !$entry['h']) {
+            return $entry;
+        }
+
+        $result  = $this->thumbs->ensure($absFile, $this->thumbWidths, $this->thumbLarge);
+        $cacheUrl = $dirUrl . '/' . rawurlencode($this->thumbs->dirName());
+
+        if ($result['variants'] !== []) {
+            $set = [];
+
+            foreach ($result['variants'] as $v) {
+                $keep[] = $v['name'];
+                $set[]  = $cacheUrl . '/' . rawurlencode($v['name']) . ' ' . $v['w'] . 'w';
+            }
+
+            // Complete the set with the original at its native width.
+            $set[] = $entry['url'] . ' ' . (int) $entry['w'] . 'w';
+
+            $entry['srcset'] = implode(', ', $set);
+            $entry['src']    = $cacheUrl . '/' . rawurlencode($this->fallbackName($result['variants']));
+        }
+
+        if ($result['large'] !== null) {
+            $keep[]        = $result['large']['name'];
+            $entry['full'] = $cacheUrl . '/' . rawurlencode($result['large']['name']);
+        }
+
+        return $entry;
+    }
+
+    /**
+     * Picks the derivative to use as the plain "src": the widest that is still no wider
+     * than 1280 px, else the narrowest generated.
+     *
+     * @param   list<array{w:int, h:int, name:string}>  $variants  Ascending by width.
+     *
+     * @return  string
+     *
+     * @since   1.5.0
+     */
+    private function fallbackName(array $variants): string
+    {
+        $pick = $variants[0];
+
+        foreach ($variants as $v) {
+            if ($v['w'] <= 1280) {
+                $pick = $v;
+            }
+        }
+
+        return $pick['name'];
     }
 
     /**

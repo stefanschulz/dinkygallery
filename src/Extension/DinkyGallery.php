@@ -18,6 +18,7 @@ use Joomla\Event\SubscriberInterface;
 use TheLoom\Plugin\Content\DinkyGallery\Helper\Folder;
 use TheLoom\Plugin\Content\DinkyGallery\Helper\Render;
 use TheLoom\Plugin\Content\DinkyGallery\Helper\Shortcode;
+use TheLoom\Plugin\Content\DinkyGallery\Helper\Thumbnailer;
 
 \defined('_JEXEC') or die;
 
@@ -151,7 +152,19 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
             && $input->getInt('print') !== 1;
 
         $config = $this->config();
-        $folder = new Folder($config['base_directory'], $config['extensions']);
+
+        $thumbs = ($config['thumbs_enabled'] && \function_exists('imagecreatetruecolor'))
+            ? new Thumbnailer($config['thumb_dir'], $config['thumb_quality'])
+            : null;
+
+        $folder = new Folder(
+            $config['base_directory'],
+            $config['extensions'],
+            $thumbs,
+            $config['thumb_widths'],
+            $config['thumb_large'],
+            $config['thumb_prune']
+        );
         $matches = (new Shortcode())->find($text);
         $labels = [
             'carousel' => Text::_('PLG_CONTENT_DINKYGALLERY_ARIA_CAROUSEL'),
@@ -217,7 +230,9 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
                 continue;
             }
 
-            $gap = $this->cssLength((string) $options['gap']);
+            $gap    = $this->cssLength((string) $options['gap']);
+            $aspect = $this->cssAspect((string) $options['aspect']);
+            $cards  = max(1, (int) $options['cards']);
 
             $markup = $isHtml
                 ? Render::carousel(
@@ -228,7 +243,9 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
                         'loop'     => $options['loop'],
                         'middle'   => $options['middle'],
                         'gap'      => $gap,
-                        'aspect'   => $this->cssAspect((string) $options['aspect']),
+                        'aspect'   => $aspect,
+                        'sizes'    => '(min-width: 1200px) ' . (int) round(1200 / $cards)
+                            . 'px, ' . (int) round(100 / $cards) . 'vw',
                         'card_min' => $config['card_min'],
                         'backdrop' => $config['backdrop_opacity'],
                         'lb_color' => $config['lightbox_rgb'],
@@ -247,7 +264,7 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
                 . ' (cards=' . (int) $options['cards'] . ' size=' . (int) $options['size']
                 . ' loop=' . (int) $options['loop'] . ' sort=' . $options['sort']
                 . ' middle=' . $options['middle'] . ' gap=' . $gap
-                . ' aspect=' . $this->cssAspect((string) $options['aspect']) . ') [' . $absPath . ']';
+                . ' aspect=' . $aspect . ') [' . $absPath . ']';
         }
 
         ksort($tagLog);
@@ -261,6 +278,15 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
             $log[] = 'assets: ' . $this->loadAssets($doc);
         }
 
+        if ($thumbs !== null) {
+            $s = $thumbs->stats();
+
+            if ($s['made'] || $s['reused'] || $s['pruned'] || $s['skipped']) {
+                $log[] = 'thumbs: ' . $s['made'] . ' made, ' . $s['reused'] . ' reused, '
+                    . $s['pruned'] . ' pruned, ' . $s['skipped'] . ' skipped';
+            }
+        }
+
         if ($this->debugEnabled()) {
             $text .= "\n" . $this->debugComment($log);
         }
@@ -271,7 +297,7 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
     /**
      * Reads the plugin parameters into resolved defaults.
      *
-     * @return  array{base_directory:string, extensions:string[], card_min:string, backdrop_opacity:int, lightbox_rgb:string, lightbox_padding:string, options:array<string,mixed>}
+     * @return  array{base_directory:string, extensions:string[], card_min:string, backdrop_opacity:int, lightbox_rgb:string, lightbox_padding:string, lightbox_aspect:string, thumbs_enabled:bool, thumb_dir:string, thumb_widths:list<int>, thumb_large:int, thumb_quality:int, thumb_prune:bool, options:array<string,mixed>}
      *
      * @since   1.0.0
      */
@@ -289,6 +315,12 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
             'lightbox_rgb'     => $this->hexToRgb((string) $params->get('lightbox_color', '#000000')),
             'lightbox_padding' => $this->cssLength((string) $params->get('lightbox_padding', '10px'), '10px'),
             'lightbox_aspect'  => $this->lightboxAspect((string) $params->get('lightbox_aspect', 'viewport')),
+            'thumbs_enabled'   => (int) $params->get('thumbnails', 1) === 1,
+            'thumb_dir'        => $this->thumbDirName((string) $params->get('thumb_dir', '.thumbs')),
+            'thumb_widths'     => $this->widthList((string) $params->get('thumb_widths', '480,768,1024,1600')),
+            'thumb_large'      => max(0, (int) $params->get('thumb_large', 1920)),
+            'thumb_quality'    => min(100, max(1, (int) $params->get('thumb_quality', 82))),
+            'thumb_prune'      => (int) $params->get('thumb_prune', 1) === 1,
             'options'          => [
                 'folder' => '',
                 'cards'  => (int) $params->get('visible_cards', 3),
@@ -391,6 +423,58 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
         }
 
         return hexdec(substr($hex, 0, 2)) . ', ' . hexdec(substr($hex, 2, 2)) . ', ' . hexdec(substr($hex, 4, 2));
+    }
+
+    /**
+     * Sanitises the thumb_dir parameter to a single, safe path segment. Slashes, "..",
+     * a leading dot-dot or an empty value fall back to ".thumbs".
+     *
+     * @param   string  $raw  The thumb_dir parameter value.
+     *
+     * @return  string
+     *
+     * @since   1.5.0
+     */
+    private function thumbDirName(string $raw): string
+    {
+        $name = trim(str_replace('\\', '/', $raw), " \t/");
+
+        if ($name === '' || str_contains($name, '/') || str_contains($name, '..')) {
+            return '.thumbs';
+        }
+
+        return $name;
+    }
+
+    /**
+     * Parses the thumb_widths list into a sorted, de-duplicated array of pixel widths
+     * (1-10000). Empty / all-invalid input falls back to the default ladder.
+     *
+     * @param   string  $raw  The thumb_widths parameter value.
+     *
+     * @return  list<int>
+     *
+     * @since   1.5.0
+     */
+    private function widthList(string $raw): array
+    {
+        $out = [];
+
+        foreach (explode(',', $raw) as $token) {
+            $n = (int) trim($token);
+
+            if ($n >= 1 && $n <= 10000) {
+                $out[$n] = $n;
+            }
+        }
+
+        if ($out === []) {
+            return [480, 768, 1024, 1600];
+        }
+
+        ksort($out);
+
+        return array_values($out);
     }
 
     /**

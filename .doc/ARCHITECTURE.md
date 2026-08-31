@@ -2,7 +2,7 @@
 
 Primary technical reference for developers and AI agents working on this codebase.
 
-**Version**: 1.4.0
+**Version**: 1.5.0
 **Last Updated**: August 2026
 
 ---
@@ -30,7 +30,8 @@ dinkygallery/
 ├── services/provider.php               # DI: registers the plugin as PluginInterface
 ├── src/Extension/DinkyGallery.php       # Orchestration: event, context guard, per-tag replace, asset load, debug comment
 ├── src/Helper/Shortcode.php             # Regex find + shell-style attribute parse + <code>/<pre> skip
-├── src/Helper/Folder.php                # Resolve + validate folder, list images, per-request getimagesize cache
+├── src/Helper/Folder.php                # Resolve + validate folder, list images, per-request getimagesize cache, thumbnail wiring
+├── src/Helper/Thumbnailer.php           # GD width-scaled derivative cache in <folder>/.thumbs, hash-keyed, self-pruning
 ├── src/Helper/Render.php                # Build the .dg carousel markup / the .dg-plain fallback list
 ├── media/plg_content_dinkygallery/
 │   ├── css/dinkygallery.css            # Carousel + lightbox styles
@@ -132,27 +133,55 @@ the keys the tag carries.
 
 ### `Folder`
 
-Constructed once per request with `(base_directory, extensions[])`; the
-`getimagesize()` cache is on the instance and spans every gallery on the page.
+Constructed once per request with `(base_directory, extensions[], ?Thumbnailer,
+thumbWidths[], thumbLarge, thumbPrune)`; the `getimagesize()` cache is on the instance
+and spans every gallery on the page.
 
 - `resolve($name)` → absolute real path (a directory **or** a single image file) or
   `null`; `getError()` explains a `null`. A leading slash is stripped (sigplus treats
   `/x` and `x` alike); `..` and backslashes are rejected, as is a non-existent target,
   a non-image non-directory, or a real path outside `realpath(JPATH_ROOT/base_directory)`.
-- `images($abs, $relBase, $sort)` → `[{url, alt, w, h}]` for a directory. Non-dotfile
-  files whose lower-cased extension is in the set; `strnatcasecmp` sort, reversed for
-  `desc`. `url` is `Uri::root(true)` + the relative path with each segment
-  `rawurlencode`d. `w`/`h` from the cached `@getimagesize`; `null` when it fails.
+- `images($abs, $relBase, $sort)` → `[{url, src, srcset, full, alt, w, h}]` for a
+  directory. Non-dotfile files whose lower-cased extension is in the set;
+  `strnatcasecmp` sort, reversed for `desc`. `url` is `Uri::root(true)` + the relative
+  path with each segment `rawurlencode`d. `w`/`h` from the cached `@getimagesize`;
+  `null` when it fails. After the loop, if pruning is on, the folder's `.thumbs` is
+  swept of derivatives not referenced by any listed image.
 - `single($absFile, $relFile)` → a one-element list for a shortcode that points
   straight at an image file. The Extension picks `single()` vs `images()` on
-  `is_file($absPath)`.
+  `is_file($absPath)`. Never prunes — it shares its `.thumbs` with sibling images.
+- `withThumbs()` (private) calls `Thumbnailer::ensure()` per image and fills `src`
+  (a mid copy — widest ≤ 1280 px), `srcset` (every generated width + the original at
+  its native width) and `full` (the `large-` copy, or the original when it is already
+  within `thumb_large`). With no `Thumbnailer`, or `w`/`h` unknown, `src` = `full` =
+  `url` and `srcset` is empty.
+
+### `Thumbnailer`
+
+GD only, no cropping. `ensure($srcAbs, $widths[], $largeMax)` returns
+`{variants:[{w,h,name}], large:{w,h,name}|null}`:
+
+- Source read with `getimagesize`; type must be JPEG / PNG / WebP / GIF **and** GD
+  must be able to both read and write it, else an empty result (caller serves the
+  original). Derivatives keep the source format.
+- File name: `<base>.<key>.<w>x<h>.<ext>` (or `.large-<w>x<h>.`), where
+  `key = substr(sha1(mtime . '|' . size . '|' . quality), 0, 8)`. A missing target is
+  written to `<target>.<pid>.tmp` then `rename`d in place; `made` / `reused` /
+  `skipped` counters feed the debug line.
+- Widths ≥ the source width are skipped (no upscaling); the `srcset` still offers the
+  original at full width. The `large-` copy is produced only when the source's long
+  edge exceeds `largeMax`.
+- `prune($dirAbs, $keep[])` deletes files in a `.thumbs` that match the name pattern
+  `/\.[0-9a-f]{8}\.(?:large-)?\d+x\d+\.[a-z0-9]+$/i` and are not in `$keep`; anything
+  not matching that pattern is left untouched. An emptied folder is `rmdir`-ed.
 
 ### `Render`
 
 Static. `carousel($images, $opts, $labels)` builds the `.dg` markup below;
-`plain($images)` builds the fallback `<ul>`. Every attribute value goes through
-`htmlspecialchars(…, ENT_QUOTES)`. `carousel()` clamps `cards` to ≥ 1 and `size` to
-10–100.
+`plain($images)` builds the fallback `<ul>` (always the originals — it is the degraded
+path). Every attribute value goes through `htmlspecialchars(…, ENT_QUOTES)`.
+`carousel()` clamps `cards` to ≥ 1 and `size` to 10–100, and emits `srcset` + a shared
+`sizes` only for images that have a non-empty `srcset`.
 
 ---
 
@@ -170,9 +199,11 @@ files — **keep them stable**.
   <button class="dg-arrow dg-arrow--prev" aria-label="…" hidden></button>
   <ul class="dg-track" role="list">
     <li class="dg-card">
-      <a class="dg-card__link" href="/images/…/01.jpg" data-full="/images/…/01.jpg"
-         data-w="4032" data-h="3024">
-        <img class="dg-card__img" src="/images/…/01.jpg" alt="01"
+      <a class="dg-card__link" href="/images/…/.thumbs/01.<key>.large-1920x1280.jpg"
+         data-full="/images/…/.thumbs/01.<key>.large-1920x1280.jpg">
+        <img class="dg-card__img" src="/images/…/.thumbs/01.<key>.1024x768.jpg" alt="01"
+             srcset="/images/…/.thumbs/01.<key>.480x360.jpg 480w, … , /images/…/01.jpg 4032w"
+             sizes="(min-width: 1200px) 400px, 33vw"
              loading="lazy" decoding="async" width="4032" height="3024">
         <span class="dg-count" aria-hidden="true">1 / 12</span>   <!-- N > 1; script moves it -->
       </a>
@@ -183,8 +214,10 @@ files — **keep them stable**.
 </div>
 ```
 
-`data-w`/`data-h` and the `<img>` `width`/`height` are omitted together when
-`getimagesize` failed. `.dg-count` is rendered on the first card only when the
+`href` / `data-full` and `src` are the untouched original when thumbnailing is off or
+unavailable; `srcset` / `sizes` are then absent. `sizes` is
+`(min-width: 1200px) <1200/cards>px, <100/cards>vw`. The `<img>` `width`/`height` are
+omitted when `getimagesize` failed (which also means no thumbnails for that image). `.dg-count` is rendered on the first card only when the
 gallery has more than one image; `initCarousel` then re-parents it onto the first
 visible card and rewrites the number as the strip scrolls (on `scroll`,
 `scrollend`, `resize` and after an arrow step).
@@ -276,15 +309,15 @@ One `.dg-lb` element, built lazily on the first card click and reused. Structure
 
 ## Configuration (`dinkygallery.xml` `<config>`)
 
-Three fieldsets (admin tabs): `basic` (media source + carousel), `lightbox`, and
-`advanced`. The table below is in tab / field order.
+Four fieldsets (admin tabs): `basic` (media source + carousel), `lightbox`,
+`thumbnails`, and `advanced`. The table below is in tab / field order.
 
 | parameter | type | default | consumed in |
 |---|---|---|---|
 | `base_directory` | text | `images` | `Folder` (resolve + safety) |
 | `image_extensions` | text | `jpg,jpeg,png,webp,gif,avif` | `DinkyGallery::extensionList()` → `Folder` |
 | `sort_order` | list `asc`/`desc` | `asc` | `Folder::images()` (option `sort`) |
-| `visible_cards` | number | `3` | `--dg-cards` / `data-cards` (option `cards`) |
+| `visible_cards` | number | `3` | `--dg-cards` / `data-cards` (option `cards`), `sizes` |
 | `card_aspect` | list | `4/3` | `--dg-aspect` via `cssAspect()` (option `aspect`) |
 | `card_min` | text | `13rem` | `--dg-card-min` |
 | `card_gap` | text | `0` | `--dg-gap` via `cssLength()` (option `gap`) |
@@ -295,7 +328,15 @@ Three fieldsets (admin tabs): `basic` (media source + carousel), `lightbox`, and
 | `lightbox_color` | color (hex) | `#000000` | `hexToRgb()` → `data-lb-color` → `--dg-lb-rgb` |
 | `backdrop_opacity` | number 0–100 | `60` | `data-backdrop` → `--dg-backdrop` |
 | `middle_zone_action` | list `none`/`close` | `none` | `data-middle` (option `middle`) |
+| `thumbnails` | radio 0/1 | `1` | gate: build a `Thumbnailer` (also needs `imagecreatetruecolor`) |
+| `thumb_dir` | text | `.thumbs` | `thumbDirName()` → `Thumbnailer` cache folder name |
+| `thumb_widths` | text | `480,768,1024,1600` | `widthList()` → `Folder` → `Thumbnailer::ensure()` |
+| `thumb_large` | number 0–6000 | `1920` | `Folder` → `Thumbnailer::ensure()` (`large-` copy / `full`) |
+| `thumb_quality` | number 1–100 | `82` | `Thumbnailer` encoder + hash key |
+| `thumb_prune` | radio 0/1 | `1` | `Folder::images()` → `Thumbnailer::prune()` |
 | `debug` | radio 0/1 | `0` | `DinkyGallery::debugComment()` |
+
+The five `thumb_*` fields carry `showon="thumbnails:1"`.
 
 Every `PLG_CONTENT_DINKYGALLERY_*` key referenced by the XML must exist in **both**
 `en-GB` and `de-DE` `.ini` files or the admin form shows the raw key.
@@ -313,8 +354,8 @@ Every `PLG_CONTENT_DINKYGALLERY_*` key referenced by the XML must exist in **bot
 | folder empty / missing / outside base | tag removed; debug comment says why |
 | one image | one card; lightbox opens with both nav zones `hidden` |
 | non-image files in the folder | skipped |
-| `getimagesize` fails on a file | `data-w/h` + `<img>` `width/height` omitted; `object-fit` still centres it |
-| tiny image | upscaled to fill the card / fit the frame — intended |
+| `getimagesize` fails on a file | `<img>` `width`/`height` omitted (and no thumbnails); `object-fit` still centres it |
+| tiny image | card copy is the original (no upscale); still fills the card via `object-fit` |
 | portrait image in a wide frame | translucent mat margins; the clear page outside the frame is untouched |
 | `lightbox_size` 100 | frame == viewport; only `×` / `Esc` close; the thirds still navigate |
 | `lightbox_size` small | frame centred; the clear area around it closes on click |
@@ -406,11 +447,19 @@ and a single-file path all resolve; since 1.3.0: `aspect=` override (incl. `W:H`
 `deftitle` → alt text, and a click queued during a slide advances one extra step
 (opposite clicks cancel).
 
+Since 1.5.0: `.thumbs` derivatives generated per width (JPEG / PNG / WebP, source
+format kept), `srcset` + `sizes` on the cards, `src` = mid copy, `data-full` = the
+`large-` copy capped at `thumb_large`; a 120×90 source and formats at/above a target
+width skip generation and fall back to the original; bumping a source's mtime
+regenerates its copies and prunes the stale-hash set; a foreign file in `.thumbs`
+(`notes.txt`) is never touched; single-file gallery gets the `large-` copy and does
+not prune; `mod_custom` path generates too.
+
 ### Lighthouse (1.3.0, Chrome, Navigation / Desktop)
 
 Performance **97**, Accessibility **100**, Best Practices **100**, SEO **100** on an
-article page. The Performance gap is "properly size images / next-gen formats" — cards
-load the full images with no `srcset`, the documented v1.1 item.
+article page. The 1.3.0 Performance gap was "properly size images / next-gen formats" —
+addressed in 1.5.0 by the thumbnail cache + `srcset` (re-measure pending).
 
 ---
 

@@ -3,6 +3,37 @@
 All notable changes to `plg_content_dinkygallery` are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] - 2026-08-31
+
+### Added
+- **Thumbnail cache + responsive `srcset`.** With the new **Thumbnails** tab
+  on (default), each gallery folder gets a cache subfolder (default `.thumbs`,
+  configurable) holding width-scaled copies of the originals, made on demand
+  with GD.
+  - Carousel cards carry a `srcset` at the configured widths
+    (`thumb_widths`, default `480,768,1024,1600`) plus the original, and a
+    `sizes` derived from `visible_cards`; `src` falls back to a mid copy.
+  - The lightbox loads a single copy capped on its long edge at `thumb_large`
+    (default `1920`; `0` = the untouched original). Images already at or below
+    a target size are served as-is. No JavaScript change — the card link's
+    `href` / `data-full` simply points at the capped copy.
+  - **No cropping** — every copy keeps the source ratio, so intrinsic
+    `width`/`height` stay valid and the CSS aspect box still prevents layout
+    shift.
+  - **Automatic invalidation.** A copy's file name embeds a hash of the
+    source's mtime + size + quality, so replacing an image under the same
+    name regenerates its copies on the next render.
+  - **Pruning** (`thumb_prune`, default on): after listing a folder, copies
+    that are no longer current — replaced image, dropped width, deleted
+    original — are removed, and only files matching the plugin's own naming
+    pattern are ever touched. An emptied cache folder is deleted. A full
+    manual reset is deleting the `.thumbs` folders (e.g. in Media Manager).
+  - `thumb_quality` (default `82`) drives the JPEG / WebP encoder; PNG and
+    GIF stay lossless. A format GD cannot handle (typically AVIF) or a
+    missing GD extension falls back to the original everywhere.
+  - The `debug` comment gains a `thumbs: N made, N reused, N pruned,
+    N skipped` line.
+
 ## [1.4.0] - 2026-08-31
 
 ### Added

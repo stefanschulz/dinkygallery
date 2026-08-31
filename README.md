@@ -97,14 +97,20 @@ and opening are instant.
 A small `i / N` badge rides the first visible carousel card and shows its
 position (`1 / N` on the first card without JavaScript).
 
+**Images.** With the **Thumbnails** setting on (default), cards are served from a
+cached `srcset` of width-scaled copies instead of the full-resolution originals, and
+the lightbox loads a copy capped at `thumb_large` px on its long edge. Copies live in
+a `.thumbs` subfolder of each gallery folder and regenerate when an image is replaced.
+See [Parameters](#parameters).
+
 **Without JavaScript** — the cards are plain links to the full images; the strip still
 scrolls. On a feed, `tmpl=component`, `print=1` or any non-HTML document, the gallery
 is a plain `<ul class="dg-plain">` list of linked images, no carousel, no assets.
 
 ## Parameters
 
-The plugin edit screen groups these into three tabs — **Basic** (media source and
-carousel), **Lightbox**, and **Advanced**.
+The plugin edit screen groups these into four tabs — **Basic** (media source and
+carousel), **Lightbox**, **Thumbnails**, and **Advanced**.
 
 **Basic**
 
@@ -130,6 +136,17 @@ carousel), **Lightbox**, and **Advanced**.
 | `backdrop_opacity` | `60` | opacity of the lightbox mat, percent |
 | `middle_zone_action` | `none` | what the middle third of the lightbox does — `none` / `close` |
 
+**Thumbnails**
+
+| parameter | default | what it does |
+|---|---|---|
+| `thumbnails` | `yes` | serve cached width-scaled copies (with `srcset`) instead of the originals; needs GD |
+| `thumb_dir` | `.thumbs` | cache subfolder made inside each gallery folder (one path segment) |
+| `thumb_widths` | `480,768,1024,1600` | pixel widths generated for the card `srcset`; widths ≥ an image's own width are skipped |
+| `thumb_large` | `1920` | long-edge cap, in px, of the copy the lightbox loads; `0` serves the untouched original |
+| `thumb_quality` | `82` | JPEG / WebP encoder quality, 1–100 (PNG / GIF stay lossless) |
+| `thumb_prune` | `yes` | after listing a folder, delete copies that are no longer current (replaced image, dropped width, removed original) |
+
 **Advanced**
 
 | parameter | default | what it does |
@@ -149,9 +166,10 @@ removed:
 <!-- DinkyGallery:
 context: com_content.article
 mode: carousel
-tag @82 "events/grillfest": 14 images (cards=3 size=100 loop=1 sort=asc middle=none gap=0px) [/var/www/html/images/stories/events/grillfest]
+tag @82 "events/grillfest": 14 images (cards=3 size=100 loop=1 sort=asc middle=none gap=0px aspect=4/3) [/var/www/html/images/stories/events/grillfest]
 tag @530 "missing": removed (folder not found)
 assets: registered
+thumbs: 41 made, 0 reused, 0 pruned, 0 skipped
 -->
 ```
 
@@ -174,15 +192,21 @@ curl -s https://example.com/some-article | grep -E 'dg-track|dg-card|DinkyGaller
   search index.
 - **Subfolder installs.** URLs are built with `Uri::root(true)` and work under a
   subdirectory.
-- **No thumbnails in v1.** Cards load the full-size images (with intrinsic
-  `width`/`height` so there is no layout shift). Server-side thumbnail generation and
-  `srcset` are a v1.1 candidate.
+- **Thumbnails need GD.** Generation uses the GD extension. Without it (or for a
+  source format GD cannot read/write, typically AVIF) the plugin falls back to serving
+  the original everywhere — no error, just no `srcset`. `.avif` sources are always
+  served as-is.
+- **Thumbnail writes.** The web server user must be able to create the `.thumbs`
+  subfolder and write into it; on a read-only media tree, turn **Thumbnails** off.
+  A copy is written on the first request that needs it (that visitor pays the cost),
+  then reused.
 - **AVIF dimensions.** `@getimagesize()` needs GD/PHP with AVIF support to read an
   `.avif` file's size; without it those cards render without `width`/`height` (the CSS
   aspect box still prevents layout shift, and the lightbox is unaffected).
 
 ## Scope
 
-**v1.0** does everything above. Deferred to **v1.1+**: server-side thumbnail cache +
-`srcset`, captions / EXIF, zoom & pan in the lightbox, slideshow / autoplay, video,
-per-image links, a download button, fuller RTL polish, multilingual caption files.
+**v1.5** does everything above. Deferred to a later release: WebP/AVIF transcoding of
+other formats, captions / EXIF, zoom & pan in the lightbox, slideshow / autoplay,
+video, per-image links, a download button, fuller RTL polish, multilingual caption
+files.

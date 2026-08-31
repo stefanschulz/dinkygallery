@@ -3,8 +3,10 @@
  * Copyright (C) 2026 The Loom / Stefan Schulz
  * GNU General Public License version 3 or later; see LICENSE.txt
  *
- * Slice 3: the scroll-snap carousel (reveal arrows, step by one card, wrap or
- * disable at the ends). Slice 4 adds the lightbox. See .doc/WORKPLAN.md §8.
+ * Progressive enhancement for the server-rendered .dg markup: reveals the
+ * carousel arrows when the strip overflows and steps it one card at a time, and
+ * builds a single reusable lightbox for the card links. Class / data-* names are
+ * the contract shared with dinkygallery.css and Render.php — keep them stable.
  */
 
 const REDUCED_MOTION = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -215,6 +217,17 @@ function altOf(link) {
 }
 
 /**
+ * The full-size image URL for a card link: `data-full` (the size-capped copy),
+ * falling back to the link's own href.
+ *
+ * @param {HTMLElement} link  A .dg-card__link.
+ * @returns {string}
+ */
+function fullOf(link) {
+    return link.dataset.full || link.getAttribute('href');
+}
+
+/**
  * Builds the single lightbox element, appends it to <body>, wires its events.
  *
  * @returns {typeof LB}
@@ -357,7 +370,7 @@ function setBackgroundInert(on) {
  */
 function showLightboxImage(i) {
     const link = lbState.links[i];
-    const url = link.dataset.full || link.getAttribute('href');
+    const url = fullOf(link);
     const alt = altOf(link);
 
     window.clearTimeout(lbState.spinTimer);
@@ -391,8 +404,7 @@ function applyImageState(i) {
         const k = lbState.loop ? (j + n) % n : j;
 
         if (k >= 0 && k < n) {
-            const l = lbState.links[k];
-            new Image().src = l.dataset.full || l.getAttribute('href');
+            new Image().src = fullOf(lbState.links[k]);
         }
     });
 
@@ -467,7 +479,7 @@ function flushPendingNav() {
  */
 function slideToImage(i, dir) {
     const link = lbState.links[i];
-    const url = link.dataset.full || link.getAttribute('href');
+    const url = fullOf(link);
     const outgoing = LB.img;
     const shift = LB.stage.clientWidth || LB.frame.clientWidth || 1000;
 
@@ -699,7 +711,7 @@ function init() {
     const warmed = new Set();
     const warm = (e) => {
         const link = e.target.closest ? e.target.closest('.dg-card__link') : null;
-        const url = link && (link.dataset.full || link.getAttribute('href'));
+        const url = link && fullOf(link);
 
         if (url && !warmed.has(url)) {
             warmed.add(url);
