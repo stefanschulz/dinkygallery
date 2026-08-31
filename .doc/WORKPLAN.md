@@ -331,6 +331,21 @@ funktionsfähig) → 9 → 10 → 11 → 12.
   `onContentPrepare` — `{gallery}` bleibt im Feed roh. Kein Hook dafür in v1;
   als bekannte Einschränkung dokumentiert. Betrifft die empulsiv-Artikelseiten nicht.
 
+## Während Slice 6 (Abnahme) gefunden & behoben
+
+- **Carousel nicht per Touch/Wheel/Scrollbar scrollbar:** Cassiopeia (J5 **und** J6)
+  hat `.com-content-article ul{overflow:hidden}` — Spezifität (0,1,1) schlägt
+  `.dg-track`. Nur die JS-Pfeile (programmatisch) bewegten den Strip. Fix: Selektoren
+  unter `.dg` scopen bzw. `.dg-plain` verdoppeln.
+- **Hintergrund nicht `inert`** bei offener Lightbox → AT/Tab erreichten die Seite
+  dahinter. Fix: alle `<body>`-Kinder außer `.dg-lb` bekommen `inert`.
+- **Carousel-Schritt driftete** auf einer Seite mit vielen Galerien (ein Klick sprang
+  mehrere Karten). Fix: `go()` synchronisiert `target` im Leerlauf an die echte
+  Scrollposition.
+- **`build.xml`** legte `.releases/` nicht an → `phing package` scheiterte bei
+  frischem Checkout. Fix: `<mkdir>`.
+- **ZIP-Install** verifiziert auf J5 (frisch) und J6 (Wegwerf-Stack, primäre Abnahme).
+
 ## Offene Punkte
 
 1. **Empulsiv-Migration (Spec §11)** ist **nicht Teil dieses Repos** — nur Abnahme:

@@ -3,10 +3,14 @@
 All notable changes to `plg_content_dinkygallery` are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.0.0] - 2026-08-31
 
 First release. `{gallery …}` in a `com_content` article becomes an in-article card
 carousel with a click-through lightbox; zero third-party JavaScript.
+
+Verified against the spec §9 matrix on **Joomla 6.x** (disposable stack, installed
+from the built ZIP) and **Joomla 5.x** (dev stack; clean ZIP install also confirmed) —
+PHP 8.x, Cassiopeia. No PHP notices, no console errors.
 
 ### Plugin
 
@@ -43,7 +47,10 @@ carousel with a click-through lightbox; zero third-party JavaScript.
   JavaScript. Card basis `max(--dg-card-min, (100% - gaps) / --dg-cards)` — one rule,
   no media queries: a card never falls below `card_min`, the strip shows fewer and
   scrolls. Fixed-aspect `object-fit: cover` boxes, `:focus-visible` outlines,
-  `prefers-reduced-motion` handling, RTL arrow mirroring.
+  `prefers-reduced-motion` handling, RTL arrow mirroring. The strip and card
+  selectors are scoped under `.dg` (and `.dg-plain` doubled) to out-weigh site
+  templates that reset `ul` / `li` — Cassiopeia's `.com-content-article ul {
+  overflow: hidden }` would otherwise disable the strip's own scrolling.
 - JS (ES module): reveals the prev/next arrows only when the track overflows, scrolls
   one card per click, wraps at the ends when `data-loop="1"` else disables the end
   arrow. Intended position tracked in `target`, not read from `scrollLeft` (which lags
@@ -65,8 +72,8 @@ carousel with a click-through lightbox; zero third-party JavaScript.
   shows a `zoom-out` cursor.
 - Closes on the ×, a click outside the frame, or `Esc`. `←` / `→` navigate. Focus moves
   to × on open, is trapped in the dialog (`role="dialog"`, `aria-modal`), returns to
-  the opening card on close. `<html>` scroll is locked with scrollbar-width
-  compensation.
+  the opening card on close. Every other `<body>` child is set `inert` while the
+  lightbox is open. `<html>` scroll is locked with scrollbar-width compensation.
 - Incoming image preloaded (previous stays visible until ready), spinner + opacity dip
   after 150 ms, both neighbours preloaded. 120 ms fade, none under
   `prefers-reduced-motion`. ARIA labels via `Text::script()` / `Joomla.Text` with
