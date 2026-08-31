@@ -2,7 +2,7 @@
 
 Primary technical reference for developers and AI agents working on this codebase.
 
-**Version**: 1.1.0
+**Version**: 1.2.0
 **Last Updated**: August 2026
 
 ---
@@ -115,26 +115,36 @@ are loaded**. The carousel and lightbox only exist on a normal HTML page.
 `{raw, start, length, options, skip}` (byte offsets). `options` is a partial map — only
 the keys the tag carries.
 
-- Match: `/\{gallery\b\s*(?<body>[^}]*)\}/i`.
+- Match: `#\{gallery\b\s*(?<body>[^}]*)\}(?:(?<inner>[^{}]*)\{/gallery\})?#i` — the
+  `{/gallery}` and its inner text are optional, so both DinkyGallery's own form and
+  the **sigplus `{gallery …}path{/gallery}`** form match.
 - `skip = 'code-block'` when the text before the tag has an unclosed `<code`/`<pre`
   (open count > close count) — best effort.
 - Body with no `=` → `{folder: body}`. Body with `=` → the shell-style token grammar
   `#(?<=\s|^)(?:([A-Za-z_][\w:.\-]*)=)?('…'|"…"|-?\d+(\.\d+)?|[\w:.\/\-]+)(?=\s|$)#`;
   a leading un-named value is the folder; recognised keys are `folder`, `cards`, `size`,
-  `loop`, `sort`, `middle`, `gap`; the rest are ignored.
+  `loop`, `sort`, `middle`, `gap`; the rest are ignored (so sigplus's `width`,
+  `height`, `deftitle`, `lightbox`, … in the opening tag do no harm).
+- **Closing-tag form:** when `{/gallery}` is present, the trimmed inner text becomes
+  `folder` (overriding anything from the opening tag). It may name a directory or a
+  single image file.
 
 ### `Folder`
 
 Constructed once per request with `(base_directory, extensions[])`; the
 `getimagesize()` cache is on the instance and spans every gallery on the page.
 
-- `resolve($name)` → absolute real path or `null`; `getError()` explains a `null`.
-  Rejects `..`, a leading slash, a non-existent target, a non-directory, or a real path
-  that is not inside `realpath(JPATH_ROOT/base_directory)`.
-- `images($abs, $relBase, $sort)` → `[{url, alt, w, h}]`. Non-dotfile files whose
-  lower-cased extension is in the set; `strnatcasecmp` sort, reversed for `desc`. `url`
-  is `Uri::root(true)` + the relative path with each segment `rawurlencode`d. `w`/`h`
-  come from the cached `@getimagesize`; `null` when it fails.
+- `resolve($name)` → absolute real path (a directory **or** a single image file) or
+  `null`; `getError()` explains a `null`. A leading slash is stripped (sigplus treats
+  `/x` and `x` alike); `..` and backslashes are rejected, as is a non-existent target,
+  a non-image non-directory, or a real path outside `realpath(JPATH_ROOT/base_directory)`.
+- `images($abs, $relBase, $sort)` → `[{url, alt, w, h}]` for a directory. Non-dotfile
+  files whose lower-cased extension is in the set; `strnatcasecmp` sort, reversed for
+  `desc`. `url` is `Uri::root(true)` + the relative path with each segment
+  `rawurlencode`d. `w`/`h` from the cached `@getimagesize`; `null` when it fails.
+- `single($absFile, $relFile)` → a one-element list for a shortcode that points
+  straight at an image file. The Extension picks `single()` vs `images()` on
+  `is_file($absPath)`.
 
 ### `Render`
 
@@ -310,6 +320,7 @@ Every `PLG_CONTENT_DINKYGALLERY_*` key referenced by the XML must exist in **bot
 | requirement 9 — frame transparent, whole viewport dimmed | dim sits on the frame; the page outside a small lightbox stays clear | client decision after review — a small lightbox should not dim the whole page |
 | `base_directory` as a `folder` field | plain `text` field | Joomla has no `folder` field type; `folderlist` recurses the whole install or breaks the root-relative path semantics |
 | shortcode attributes: `folder cards size loop sort middle` | plus `gap` | consistency — every other visual parameter has an override |
+| "same `{gallery}` shortcode … `{gallery <folder>}`-style tags" | also parses the **sigplus `{gallery …}path{/gallery}`** form, a leading-slash path and a single-file path | the empulsiv content actually uses the closing-tag form throughout (211/211); the spec's premise was wrong (§11) |
 | GPLv2-or-later | GPLv3-or-later | matches the repo's `LICENSE` and the companion DinkyTags plugin |
 | "feed → plain `<ul>` list" | handled *if* dispatched; core does not fire `onContentPrepare` for feeds | no clean hook exists; documented as a limitation |
 

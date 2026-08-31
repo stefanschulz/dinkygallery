@@ -16,14 +16,18 @@ namespace TheLoom\Plugin\Content\DinkyGallery\Helper;
 /**
  * Finds {gallery ...} shortcodes in article text and parses their attributes.
  *
- * Two forms, both starting with "{gallery":
+ * Forms, all starting with "{gallery":
  *   {gallery my-folder}
  *   {gallery folder="my-folder" cards="4" size="80" loop="0" sort="desc" middle="close"}
+ *   {gallery ...opening attrs...}path/or/file{/gallery}   (sigplus compatibility)
  *
  * The bare form is everything up to the closing brace, trimmed, taken as the folder
  * name. The attribute form (body contains "=") is parsed into name="value" pairs with
- * a shell-style token grammar; a leading bare token is still accepted as the folder
- * for backward compatibility. Unknown attributes are ignored.
+ * a shell-style token grammar; a leading bare token is still accepted as the folder.
+ * The closing-tag form takes the folder (or single image file) from the text between
+ * the tags; the opening attributes are parsed the same way, so any recognised
+ * DinkyGallery attribute still applies while sigplus-only ones (width, height,
+ * alignment, deftitle, lightbox, …) are ignored.
  *
  * @since  1.0.0
  */
@@ -50,22 +54,30 @@ final class Shortcode
      */
     public function find(string $text): array
     {
-        if (!preg_match_all('/\{gallery\b\s*(?<body>[^}]*)\}/i', $text, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER)) {
+        // Opening tag, then optionally "inner text {/gallery}" (sigplus form).
+        $pattern = '#\{gallery\b\s*(?<body>[^}]*)\}(?:(?<inner>[^{}]*)\{/gallery\})?#i';
+
+        if (!preg_match_all($pattern, $text, $matches, PREG_OFFSET_CAPTURE | PREG_SET_ORDER)) {
             return [];
         }
 
         $out = [];
 
         foreach ($matches as $m) {
-            $raw   = $m[0][0];
-            $start = $m[0][1];
-            $body  = $m['body'][0];
+            $raw     = $m[0][0];
+            $start   = $m[0][1];
+            $options = $this->parseBody($m['body'][0]);
+
+            // Closing-tag form: the folder / file lives between the tags and wins.
+            if (isset($m['inner'][1]) && $m['inner'][1] !== -1) {
+                $options['folder'] = trim($m['inner'][0]);
+            }
 
             $out[] = [
                 'raw'     => $raw,
                 'start'   => $start,
                 'length'  => \strlen($raw),
-                'options' => $this->parseBody($body),
+                'options' => $options,
                 'skip'    => $this->insideCodeOrPre(substr($text, 0, $start)) ? 'code-block' : null,
             ];
         }

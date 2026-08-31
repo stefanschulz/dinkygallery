@@ -73,9 +73,10 @@ final class Folder
     }
 
     /**
-     * Validates a folder name and returns its absolute real path, or null.
+     * Validates a folder (or single image file) name and returns its absolute real
+     * path, or null.
      *
-     * @param   string  $folderName  The folder name from the shortcode.
+     * @param   string  $folderName  The folder / file name from the shortcode.
      *
      * @return  string|null  Absolute path on success; null on any rejection.
      *
@@ -85,9 +86,11 @@ final class Folder
     {
         $this->error = '';
 
-        $name = trim(str_replace('\\', '/', $folderName));
+        // A leading slash is tolerated (sigplus treats "/x" and "x" the same, both
+        // under the base); ".." and backslashes are not.
+        $name = ltrim(trim(str_replace('\\', '/', $folderName)), '/');
 
-        if ($name === '' || $name[0] === '/' || str_contains($name, '..')) {
+        if ($name === '' || str_contains($name, '..')) {
             $this->error = 'invalid folder name';
 
             return null;
@@ -109,8 +112,11 @@ final class Folder
             return null;
         }
 
-        if (!is_dir($targetAbs)) {
-            $this->error = 'not a directory';
+        $isFile = is_file($targetAbs)
+            && \in_array(strtolower(pathinfo($targetAbs, \PATHINFO_EXTENSION)), $this->extensions, true);
+
+        if (!is_dir($targetAbs) && !$isFile) {
+            $this->error = 'not a directory or image file';
 
             return null;
         }
@@ -190,6 +196,34 @@ final class Folder
         }
 
         return $out;
+    }
+
+    /**
+     * A one-image "gallery" for a shortcode that points straight at a file
+     * (sigplus form: {gallery}path/to/photo.jpg{/gallery}).
+     *
+     * @param   string  $absFile  Absolute path from resolve().
+     * @param   string  $relFile  Site-root-relative path of the file (for the URL).
+     *
+     * @return  list<array{url:string, alt:string, w:?int, h:?int}>
+     *
+     * @since   1.2.0
+     */
+    public function single(string $absFile, string $relFile): array
+    {
+        $rel  = trim(str_replace('\\', '/', $relFile), '/');
+        $slash = strrpos($rel, '/');
+        $dir  = $slash === false ? '' : substr($rel, 0, $slash);
+        $file = $slash === false ? $rel : substr($rel, $slash + 1);
+        $size = $this->size($absFile);
+
+        return [[
+            'url' => rtrim(Uri::root(true), '/') . '/'
+                . ($dir === '' ? '' : $this->encodePath($dir) . '/') . rawurlencode($file),
+            'alt' => pathinfo($file, \PATHINFO_FILENAME),
+            'w'   => $size[0] ?? null,
+            'h'   => $size[1] ?? null,
+        ]];
     }
 
     /**

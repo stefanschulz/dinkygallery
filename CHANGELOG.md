@@ -3,6 +3,25 @@
 All notable changes to `plg_content_dinkygallery` are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-08-31
+
+### Added
+- **sigplus compatibility.** `Shortcode::find()` now also matches the classic
+  `{gallery …opening attrs…}path/or/file{/gallery}` form: the folder (or single
+  image file) is taken from the text between the tags, and the opening
+  attributes are parsed the same way — recognised DinkyGallery attributes still
+  apply, sigplus-only ones (`width`, `height`, `alignment`, `deftitle`,
+  `lightbox`, …) are ignored. `Folder::resolve()` strips a leading slash
+  (`/x` ≡ `x`, both under the base; `..` / backslashes still rejected) and
+  accepts a path that points straight at an image file, rendered as a one-image
+  gallery via the new `Folder::single()`. The Smart Search tag-stripper covers
+  the closing-tag form too.
+
+  Motivated by the empulsiv site (the v1 replacement target): all 211 of its
+  `{gallery}` shortcodes use the closing-tag form — 204 as bare `{gallery}`,
+  the rest with legacy display attributes; three use a leading slash, four
+  point at a single `.jpg`. Set `base_directory` to `images/stories` there.
+
 ## [1.1.0] - 2026-08-31
 
 Lightbox and carousel polish. Verified on the Joomla 5 dev stack (Cassiopeia,

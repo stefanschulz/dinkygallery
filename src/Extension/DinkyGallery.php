@@ -104,9 +104,9 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
             return;
         }
 
-        // Smart Search: strip the tags, never inject markup into the index.
+        // Smart Search: strip the tags (both forms), never touch the index.
         if ($context === 'com_finder.indexer') {
-            $item->text = preg_replace('/\{gallery\b[^}]*\}/i', '', $item->text) ?? $item->text;
+            $item->text = preg_replace('#\{gallery\b[^}]*\}(?:[^{}]*\{/gallery\})?#i', '', $item->text) ?? $item->text;
 
             return;
         }
@@ -195,7 +195,9 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
             $relBase = rtrim(str_replace('\\', '/', $config['base_directory']), '/')
                 . '/' . trim(str_replace('\\', '/', $folderName), '/');
 
-            $images = $folder->images($absPath, $relBase, (string) $options['sort']);
+            $images = is_file($absPath)
+                ? $folder->single($absPath, $relBase)
+                : $folder->images($absPath, $relBase, (string) $options['sort']);
 
             if ($images === []) {
                 $tagLog[$match['start']] = $at . ': removed (0 images) [' . $absPath . ']';

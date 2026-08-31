@@ -36,11 +36,17 @@ per article — each becomes an independent gallery.
 ```
 {gallery my-folder}
 {gallery folder="my-folder" cards="4" size="80" loop="0" sort="desc" middle="close" gap="12px"}
+{gallery}my-folder{/gallery}                 ← sigplus-style, folder between the tags
+{gallery}my-folder/photo.jpg{/gallery}       ← a single image
 ```
 
 - **Bare form** — everything after `gallery ` up to `}` is the folder name.
 - **Attribute form** — space-separated `name="value"` pairs (quoted or bare). A leading
   bare word is still taken as the folder. Unknown attributes are ignored.
+- **Closing-tag form** (sigplus compatibility) — the folder, or a single image file,
+  is the text between `{gallery …}` and `{/gallery}`. Recognised attributes in the
+  opening tag still apply; sigplus-only ones are ignored. A leading `/` on the path is
+  fine.
 
 | attribute | overrides parameter | values |
 |---|---|---|
@@ -52,12 +58,12 @@ per article — each becomes an independent gallery.
 | `middle` | `middle_zone_action` | `none` / `close` |
 | `gap` | `card_gap` | a CSS length (`0`, `12px`, `1rem`) |
 
-**Folder safety.** The folder is resolved under `JPATH_ROOT/<base_directory>/`. A tag is
-rendered as nothing (with a reason in the debug comment) if the resolved real path
-contains `..`, starts with a slash, does not exist, is not a directory, or resolves
-outside `base_directory`. Files count as images when their lower-cased extension is in
-`image_extensions`; dotfiles and everything else are ignored. Images are sorted by
-filename, natural order.
+**Folder safety.** The path is resolved under `JPATH_ROOT/<base_directory>/`. A leading
+slash is ignored; a tag renders as nothing (with a reason in the debug comment) if the
+resolved real path contains `..`, does not exist, is neither a directory nor an image
+file, or resolves outside `base_directory`. Files count as images when their
+lower-cased extension is in `image_extensions`; dotfiles and everything else are
+ignored. Images are sorted by filename, natural order.
 
 A `{gallery …}` inside an unclosed `<code>` or `<pre>` (best effort) is left as
 literal text.
