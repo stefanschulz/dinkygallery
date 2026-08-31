@@ -112,8 +112,7 @@ nachgezogen — Default `0`):
   unabgeschlossenes `<code`/`<pre` steht → dann Treffer überspringen (Best Effort).
 - **Body-Auswertung**: enthält `body` ein `=` → Attribut-Form, sonst
   `folder = trim(body)`.
-- **Attribut-Parser** (Shell-Stil,
-  a shell-style tokeniser):
+- **Attribut-Parser** (Shell-Stil-Tokens):
   `#(?<=\s|^)(?:([A-Za-z_][\w:.\-]*)=)?('…'|"…"|\-?\d+(?:\.\d+)?|[\w:.\/\-]+)(?=\s|$)#`.
   Erkannte Attribute (alle optional, überschreiben den jeweiligen Param):
   `folder`, `cards`, `size`, `loop`, `sort` (`asc|desc`), `middle` (`none|close`).
@@ -349,11 +348,11 @@ funktionsfähig) → 9 → 10 → 11 → 12.
 ## Offene Punkte
 
 1. **Empulsiv-Migration (Spec §11)** ist **nicht Teil dieses Repos** — nur Abnahme:
-   the legacy gallery plugin deaktivieren, DinkyGallery aktivieren, `base_directory = images/stories`,
-   §9-Checkliste + 10–15 Realartikel, `debug` aus, the legacy gallery plugin installiert-aber-deaktiviert
-   lassen. Ablauf in `DEPLOYMENT.md` (neuer Abschnitt) dokumentieren. the legacy gallery plugin-Extras
-   (Slideshow, `labels.txt`-Captions, Wasserzeichen, Rotator-Params, `{gallery}` in
-   Modulen) vorab pro Artikel auflisten.
+   das bisherige Galerie-Plugin deaktivieren, DinkyGallery aktivieren,
+   `base_directory = images/stories`, §9-Checkliste + 10–15 Realartikel, `debug` aus,
+   das Alt-Plugin installiert-aber-deaktiviert lassen. Ablauf in `DEPLOYMENT.md` (neuer
+   Abschnitt) dokumentieren. Alt-Plugin-Extras (Slideshow, `labels.txt`-Captions,
+   Wasserzeichen, Rotator-Params, `{gallery}` in Modulen) vorab pro Artikel auflisten.
 
 ## v1.1+ (nicht jetzt, Spec §1/§10)
 

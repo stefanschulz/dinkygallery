@@ -22,8 +22,8 @@ namespace TheLoom\Plugin\Content\DinkyGallery\Helper;
  *
  * The bare form is everything up to the closing brace, trimmed, taken as the folder
  * name. The attribute form (body contains "=") is parsed into name="value" pairs with
- * the shell-style tokens; a leading bare token is still accepted as the folder for
- * backward compatibility. Unknown attributes are ignored.
+ * a shell-style token grammar; a leading bare token is still accepted as the folder
+ * for backward compatibility. Unknown attributes are ignored.
  *
  * @since  1.0.0
  */
@@ -97,7 +97,7 @@ final class Shortcode
 
         $opts = [];
 
-        // shell-style: optional name=, then a quoted, numeric or bare value.
+        // Shell-style tokens: optional name=, then a quoted, numeric or bare value.
         $pattern = '#(?<=\s|^)(?:([A-Za-z_][\w:.\-]*)=)?(\'[^\']*\'|"[^"]*"|-?\d+(?:\.\d+)?|[\w:.\/\-]+)(?=\s|$)#';
 
         if (preg_match_all($pattern, $body, $pairs, PREG_SET_ORDER)) {

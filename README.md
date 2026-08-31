@@ -4,10 +4,10 @@
 turns a `{gallery …}` shortcode in an article into an in-article **card carousel**
 with a click-through **lightbox**.
 
-Written to replace **the legacy gallery plugin** on sites that only need "point the tag at a folder,
-show the pictures": the same `{gallery <folder>}` shortcode, a cleaner and opinionated
-presentation, and **zero third-party JavaScript** — one hand-written stylesheet and one
-ES-module script, no jQuery, Swiper, GLightbox or Fancybox.
+Written for sites that only need "point the tag at a folder, show the pictures": a
+`{gallery <folder>}` shortcode, a cleaner and opinionated presentation, and **zero
+third-party JavaScript** — one hand-written stylesheet and one ES-module script, no
+jQuery, Swiper, GLightbox or Fancybox.
 
 - **Target:** Joomla 5.1+ and 6.x, PHP 8.2+, site frontend only.
 - **License:** GNU General Public License v3 or later — see [LICENSE](LICENSE).

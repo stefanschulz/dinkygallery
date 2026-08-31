@@ -6,7 +6,7 @@ developer — human or AI, in a fresh session — can build it from this documen
 alone. Companion to `joomla-opengraph-plugin-SPEC.md` (DinkyTags).
 
 Working name: **`plg_content_dinkygallery`** (rename freely).
-Purpose: replace **the legacy gallery plugin** (the legacy gallery plugin) on the empulsiv site — same
+Purpose: replace the site's existing gallery plugin on the empulsiv site — same
 `{gallery}` shortcode, cleaner/opinionated presentation, zero third-party JS.
 
 > Terminology: the request says "Lightroom" — read as **lightbox** (the modal
@@ -315,7 +315,7 @@ plg_content_dinkygallery/
 '/\{gallery\b\s*(?<body>[^}]*)\}/i'
 ```
 Then: if `body` has `=` → parse as attributes; else `folder = trim(body)`.
-Attribute parse: reuse the pattern from a shell-style tokeniser
+Attribute parse: a shell-style token pattern
 (`#(?<=\s|^)(?:([A-Za-z_][\w:.\-]*)=)?('…'|"…"|\-?\d+(?:\.\d+)?|[\w:.\/\-]+)(?=\s|$)#`).
 
 ### 7.5 URLs
@@ -398,25 +398,26 @@ Verify:
 
 ---
 
-## 11. Acceptance: replace the legacy gallery plugin on empulsiv (w2026)
+## 11. Acceptance: replace the existing gallery plugin on empulsiv (w2026)
 
-- **Same shortcode.** the legacy gallery plugin and DinkyGallery both own `{gallery …}` → they
-  cannot run together. Migration = disable the legacy gallery plugin, enable
-  `plg_content_dinkygallery`.
-- **~209 published articles** use `{gallery <folder>}` today. the legacy gallery plugin's base was
-  `images/stories` (`base_folder` param). Set DinkyGallery `base_directory` to
-  **`images/stories`** so the existing `{gallery schallwende_grillfest}`-style
-  tags resolve unchanged. Spot-check a range of those articles after switching.
-- the legacy gallery plugin also emitted `og:image` (handled separately — it's set to
-  `settings: open_graph=0`, see `DEPLOYMENT.md §H8`). DinkyGallery must **not**
-  emit any social meta — DinkyTags owns that.
-- the legacy gallery plugin extras NOT in v1 scope and to be checked per-article after migration:
-  lightbox slideshow, captions from `labels.txt`, watermarks, per-gallery
-  layout/rotator params, `{gallery}` inside modules. List which articles rely on
-  them before flipping the switch.
+- **Same shortcode.** The legacy gallery plugin and DinkyGallery both own
+  `{gallery …}` → they cannot run together. Migration = disable the legacy
+  plugin, enable `plg_content_dinkygallery`.
+- **~209 published articles** use `{gallery <folder>}` today. The legacy plugin's
+  base was `images/stories` (its base-folder param). Set DinkyGallery
+  `base_directory` to **`images/stories`** so the existing
+  `{gallery schallwende_grillfest}`-style tags resolve unchanged. Spot-check a
+  range of those articles after switching.
+- The legacy plugin also emitted `og:image` (handled separately — its social
+  meta is switched off, see `DEPLOYMENT.md §H8`). DinkyGallery must **not** emit
+  any social meta — DinkyTags owns that.
+- Legacy-plugin extras NOT in v1 scope and to be checked per-article after
+  migration: lightbox slideshow, captions from a per-folder labels file,
+  watermarks, per-gallery layout/rotator params, `{gallery}` inside modules.
+  List which articles rely on them before flipping the switch.
 - Rollout: install DinkyGallery (disabled) → set params (`base_directory =
   images/stories`, `visible_cards = 3`, `lightbox_size = 100`, `debug = 1` on
-  dev) → disable the legacy gallery plugin, enable DinkyGallery → walk the §9 checklist + 10–15
-  real articles → set `debug = 0` → keep the legacy gallery plugin installed-but-disabled until
-  confident, then `extension:remove` it.
+  dev) → disable the legacy plugin, enable DinkyGallery → walk the §9 checklist
+  + 10–15 real articles → set `debug = 0` → keep the legacy plugin
+  installed-but-disabled until confident, then `extension:remove` it.
 - Record in `DEPLOYMENT.md` (new section, e.g. §I) as a live delta.

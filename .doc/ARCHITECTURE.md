@@ -11,7 +11,7 @@ Primary technical reference for developers and AI agents working on this codebas
 
 A Joomla **content plugin** (`plg_content_dinkygallery`) that replaces a `{gallery …}`
 shortcode in `com_content` articles with an in-article card carousel and a
-click-through lightbox. It is the opinionated replacement for **the legacy gallery plugin** on sites that
+click-through lightbox. It is an opinionated, dependency-free option for sites that
 only use `{gallery <folder>}`.
 
 No database tables, no AJAX, no admin views. Two media assets (one CSS file, one ES
@@ -114,7 +114,7 @@ the keys the tag carries.
 - Match: `/\{gallery\b\s*(?<body>[^}]*)\}/i`.
 - `skip = 'code-block'` when the text before the tag has an unclosed `<code`/`<pre`
   (open count > close count) — best effort.
-- Body with no `=` → `{folder: body}`. Body with `=` → the shell-style tokens
+- Body with no `=` → `{folder: body}`. Body with `=` → the shell-style token grammar
   `#(?<=\s|^)(?:([A-Za-z_][\w:.\-]*)=)?('…'|"…"|-?\d+(\.\d+)?|[\w:.\/\-]+)(?=\s|$)#`;
   a leading un-named value is the folder; recognised keys are `folder`, `cards`, `size`,
   `loop`, `sort`, `middle`, `gap`; the rest are ignored.
