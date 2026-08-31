@@ -43,7 +43,18 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
     protected $autoloadLanguage = true;
 
     /**
-     * com_content contexts the shortcode is processed in.
+     * The context of the current onContentPrepare run, for the debug comment.
+     *
+     * @var    string
+     * @since  1.0.0
+     */
+    private string $currentContext = '';
+
+    /**
+     * Contexts the shortcode is processed in. The com_content article/category/
+     * featured/archive views are the guaranteed targets; com_content.feed is
+     * handled if ever dispatched (core builds feeds without it); mod_custom.content
+     * lets a Custom HTML module carry a gallery when its "Prepare Content" is on.
      *
      * @var    string[]
      * @since  1.0.0
@@ -54,6 +65,7 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
         'com_content.featured',
         'com_content.archive',
         'com_content.feed',
+        'mod_custom.content',
     ];
 
     /**
@@ -103,6 +115,7 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
             return;
         }
 
+        $this->currentContext = $context;
         $original = $item->text;
 
         try {
@@ -137,21 +150,24 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
             && strtolower((string) $input->getCmd('format', 'html')) === 'html'
             && $input->getInt('print') !== 1;
 
-        $config   = $this->config();
-        $log       = ['mode: ' . ($isHtml ? 'carousel' : 'plain list')];
-        $folder    = new Folder($config['base_directory'], $config['extensions']);
-        $matches   = (new Shortcode())->find($text);
-        $labels    = [
+        $config = $this->config();
+        $folder = new Folder($config['base_directory'], $config['extensions']);
+        $matches = (new Shortcode())->find($text);
+        $labels = [
             'carousel' => Text::_('PLG_CONTENT_DINKYGALLERY_ARIA_CAROUSEL'),
             'prev'     => Text::_('PLG_CONTENT_DINKYGALLERY_ARIA_PREV'),
             'next'     => Text::_('PLG_CONTENT_DINKYGALLERY_ARIA_NEXT'),
         ];
+
         $rendered = 0;
+        $tagLog   = [];
 
         // Work backwards so each replacement leaves the earlier byte offsets valid.
         foreach (array_reverse($matches) as $match) {
+            $at = 'tag @' . $match['start'];
+
             if ($match['skip'] !== null) {
-                $log[] = 'tag @' . $match['start'] . ': left raw (' . $match['skip'] . ')';
+                $tagLog[$match['start']] = $at . ': left raw (' . $match['skip'] . ')';
 
                 continue;
             }
@@ -160,17 +176,18 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
             $folderName = trim((string) $options['folder']);
 
             if ($folderName === '') {
-                $log[] = 'tag @' . $match['start'] . ': removed (no folder given)';
-                $text  = substr_replace($text, '', $match['start'], $match['length']);
+                $tagLog[$match['start']] = $at . ': removed (no folder given)';
+                $text = substr_replace($text, '', $match['start'], $match['length']);
 
                 continue;
             }
 
+            $at .= ' "' . $folderName . '"';
             $absPath = $folder->resolve($folderName);
 
             if ($absPath === null) {
-                $log[] = 'tag @' . $match['start'] . ' "' . $folderName . '": removed (' . $folder->getError() . ')';
-                $text  = substr_replace($text, '', $match['start'], $match['length']);
+                $tagLog[$match['start']] = $at . ': removed (' . $folder->getError() . ')';
+                $text = substr_replace($text, '', $match['start'], $match['length']);
 
                 continue;
             }
@@ -181,11 +198,13 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
             $images = $folder->images($absPath, $relBase, (string) $options['sort']);
 
             if ($images === []) {
-                $log[] = 'tag @' . $match['start'] . ' "' . $folderName . '": removed (0 images) [' . $absPath . ']';
-                $text  = substr_replace($text, '', $match['start'], $match['length']);
+                $tagLog[$match['start']] = $at . ': removed (0 images) [' . $absPath . ']';
+                $text = substr_replace($text, '', $match['start'], $match['length']);
 
                 continue;
             }
+
+            $gap = $this->cssLength((string) $options['gap']);
 
             $markup = $isHtml
                 ? Render::carousel(
@@ -195,7 +214,7 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
                         'size'     => $options['size'],
                         'loop'     => $options['loop'],
                         'middle'   => $options['middle'],
-                        'gap'      => $this->cssLength((string) $options['gap']),
+                        'gap'      => $gap,
                         'aspect'   => $config['card_aspect'],
                         'card_min' => $config['card_min'],
                         'backdrop' => $config['backdrop_opacity'],
@@ -208,8 +227,20 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
 
             $text = substr_replace($text, $markup, $match['start'], $match['length']);
             $rendered++;
-            $log[] = 'tag @' . $match['start'] . ' "' . $folderName . '": ' . \count($images) . ' images [' . $absPath . ']';
+
+            $count = \count($images);
+            $tagLog[$match['start']] = $at . ': ' . $count . ' image' . ($count === 1 ? '' : 's')
+                . ' (cards=' . (int) $options['cards'] . ' size=' . (int) $options['size']
+                . ' loop=' . (int) $options['loop'] . ' sort=' . $options['sort']
+                . ' middle=' . $options['middle'] . ' gap=' . $gap . ') [' . $absPath . ']';
         }
+
+        ksort($tagLog);
+
+        $log = array_merge(
+            ['context: ' . $this->currentContext, 'mode: ' . ($isHtml ? 'carousel' : 'plain list')],
+            array_values($tagLog)
+        );
 
         if ($rendered > 0 && $isHtml) {
             $log[] = 'assets: ' . $this->loadAssets($doc);
