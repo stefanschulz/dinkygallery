@@ -3,7 +3,10 @@
 All notable changes to `plg_content_dinkygallery` are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
-## [Unreleased]
+## [1.1.0] - 2026-08-31
+
+Lightbox and carousel polish. Verified on the Joomla 5 dev stack (Cassiopeia,
+PHP 8.x); no PHP notices, no console errors.
 
 ### Added
 - **Lightbox slide.** Prev / next now slides the image: a second `.dg-lb__img`
