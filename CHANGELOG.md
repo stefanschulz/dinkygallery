@@ -5,117 +5,109 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Added
-- `lightbox_color` (colour field, default `#000000`) and `lightbox_padding`
-  (CSS length, default `10px`) parameters. The frame mat is now
-  `rgba(var(--dg-lb-rgb), var(--dg-backdrop))` — the base colour is
-  configurable, the backdrop opacity still applies on top. The image is inset
-  from the frame edge by `--dg-lb-padding` (`inset` + `max-width/height:
-  calc(100% - 2 * pad)`), so it never touches the edge. Both travel to the
-  shared lightbox as `data-lb-color` / `data-lb-pad` on `.dg`, like the other
-  lightbox settings. Hex is parsed to an `r, g, b` triplet; a non-length
-  padding falls back to `10px`.
-- Slice 4 — lightbox (CSS + JS):
-  - one `.dg-lb` element, built on the first card click and reused. Fixed,
-    full-viewport. The dim sits on the **frame** itself
-    (`rgba(0,0,0,var(--dg-backdrop))` from `data-backdrop`), not on a
-    full-viewport backdrop: a lightbox smaller than the viewport leaves the
-    page around it clear, and at `size=100` the frame covers everything as
-    before. `.dg-lb__backdrop` stays as a transparent full-viewport click
-    catcher (`cursor: zoom-out`) — a click outside the frame closes.
-  - fixed-size frame (`--dg-size` from `data-size`, `Xvw × Xvh`, capped at the
-    viewport); the image is `object-fit: contain`, centred; empty frame area is
-    a translucent dark mat, not a black bar.
-  - left / right thirds are real `<button>` nav zones, each with a chevron:
-    dim (`opacity: .55`) by default, bright on hover, greyed (`opacity: .2`)
-    when the zone is `disabled` — which happens at the respective end when
-    `data-loop="0"` (also `aria-disabled`), mirroring the carousel arrows;
-    the gallery wraps otherwise. Zones hidden when a gallery has one image.
-    The middle third is a no-op unless `data-middle="close"`, which reveals a
-    `.dg-lb__zone--mid` that closes and shows a `zoom-out` cursor
-    (`!important` — the site template's `[type="button"]` cursor rule loads
-    later at equal specificity).
-  - close on the × (top-right of the frame), on a backdrop click outside the
-    frame, or on `Esc`. `←` / `→` navigate. Focus moves to × on open, is
-    trapped within the dialog while open (`role="dialog"`, `aria-modal`), and
-    returns to the originating card link on close. Body scroll is locked with
-    scrollbar-width compensation.
-  - the incoming image is preloaded (the previous one stays visible until it
-    is ready); a spinner + opacity dip appears after 150 ms; both neighbours
-    are preloaded after each swap. Backdrop + frame fade in over 120 ms, none
-    under `prefers-reduced-motion`.
-  - lightbox ARIA labels come from `Text::script()` (`Joomla.Text`) with
-    English fallbacks baked into the module.
-- `card_gap` parameter (default `0`) plus a `gap=` shortcode attribute: a CSS
-  length for the space between carousel cards, fed to `--dg-gap`. A bare `0` is
-  emitted as `0px` — a unitless zero makes the card-basis `calc()` invalid
-  (percentage minus number) and collapses the layout. Non-length values are
-  rejected to `0px` so the value can't break out of the `style` attribute.
-- Slice 3 — carousel styling and behaviour (no lightbox yet):
-  - `css/dinkygallery.css`: scroll-snap flex track; card basis
-    `max(--dg-card-min, (100% - gaps) / --dg-cards)` so a card never falls below
-    `card_min` and the strip just shows fewer and scrolls — one rule, no media
-    queries (the spec offered this or a media-query step-down; picked this).
-    Fixed-aspect `object-fit: cover` card boxes, circular arrow buttons with a
-    CSS chevron, `:focus-visible` outlines, RTL arrow mirroring, a light
-    `.dg-plain` fallback grid, and a `prefers-reduced-motion` block.
-  - `js/dinkygallery.js` (ES module): reveals `.dg-arrow`s only when the track
-    overflows, scrolls one card per click, wraps at the ends when `data-loop=1`
-    else disables the end arrow. The intended position is tracked in `target`
-    (not read back from `scrollLeft`, which lags during a smooth scroll, so
-    rapid clicks used to collapse onto one step); a 140 ms settle timer
-    re-syncs the arrow state after the final scroll event. `resize`-aware.
-- Slice 2 — server-side shortcode processing:
-  - `Helper\Shortcode`: finds `{gallery ...}` (bare and attribute forms, the legacy gallery plugin
-    grammar, leading bare token accepted as folder), best-effort skip of tags
-    inside an unclosed `<code>` / `<pre>`.
-  - `Helper\Folder`: folder-name validation (rejects `..`, leading slash,
-    non-existent target, or a real path escaping `base_directory`), natural
-    filename sort asc/desc, per-request `getimagesize()` cache, root-relative
-    URLs with per-segment encoding.
-  - `Helper\Render`: the `.dg` scroll-snap carousel markup (stable class /
-    `data-*` contract) and the `.dg-plain` no-JS / non-HTML fallback list.
-  - `DinkyGallery::onContentPrepare` wired: context guard
-    (`com_content.article|category|featured|archive|feed`), Smart Search indexer
-    strips the tags, per-tag resolve → list → render with byte-offset-safe
-    reverse replacement, `debug=1` decision comment, one CSS + one module script
-    registered via `WebAssetManager` only when a carousel was emitted.
-  - ARIA label strings (`_ARIA_*`) in en-GB + de-DE.
-- Media assets moved to the `css/` + `js/` subfolders Joomla's relative asset
-  resolver requires (`media/plg_content_dinkygallery/{css,js}/`); manifest
-  `<media>` updated.
+First release. `{gallery …}` in a `com_content` article becomes an in-article card
+carousel with a click-through lightbox; zero third-party JavaScript.
+
+### Plugin
+
+- Content plugin `plg_content_dinkygallery` (group `content`, `method="upgrade"`,
+  namespace `TheLoom\Plugin\Content\DinkyGallery`), DI service provider, subscribes to
+  `onContentPrepare`.
+- Handled contexts: `com_content.article` / `.category` / `.featured` / `.archive` /
+  `.feed`, and `mod_custom.content` (a Custom HTML module with *Prepare Content* on).
+  `com_finder.indexer` strips the tags so they never reach the search index. Any other
+  context is left untouched.
+- Per-tag pipeline: resolve the folder, list the images, render, splice into the text —
+  working from the last match backwards so byte offsets stay valid. Idempotent: the
+  output contains no `{gallery`, so the intro/full passes and re-entry cannot double up.
+  Wrapped in `try/catch (\Throwable)`; a failure restores the original text.
+- Non-HTML document, `tmpl=component`, `format!=html` or `print=1` → a plain
+  `<ul class="dg-plain">` of linked images, no carousel, no assets.
+- `debug=1` appends one HTML comment per processed item: context, render mode, and one
+  line per tag with folder, resolved path, image count, the options actually used, and
+  the reason a tag was skipped or removed.
+
+### Shortcode
+
+- `{gallery my-folder}` and `{gallery folder="…" cards="…" size="…" loop="…" sort="…"
+  middle="…" gap="…"}` (shell-style tokens; a leading bare word is the folder; unknown
+  attributes ignored). Each attribute overrides the matching parameter.
+- Best-effort skip of a `{gallery}` inside an unclosed `<code>` / `<pre>`.
+- Folder safety: the resolved real path is rejected (tag removed, reason logged) if it
+  contains `..`, starts with a slash, does not exist, is not a directory, or resolves
+  outside `JPATH_ROOT/<base_directory>`.
+
+### Carousel
+
+- CSS scroll-snap flex strip: scrolls by touch / wheel / trackpad / scrollbar with no
+  JavaScript. Card basis `max(--dg-card-min, (100% - gaps) / --dg-cards)` — one rule,
+  no media queries: a card never falls below `card_min`, the strip shows fewer and
+  scrolls. Fixed-aspect `object-fit: cover` boxes, `:focus-visible` outlines,
+  `prefers-reduced-motion` handling, RTL arrow mirroring.
+- JS (ES module): reveals the prev/next arrows only when the track overflows, scrolls
+  one card per click, wraps at the ends when `data-loop="1"` else disables the end
+  arrow. Intended position tracked in `target`, not read from `scrollLeft` (which lags
+  during a smooth scroll); a 140 ms settle timer re-syncs the arrows; `resize`-aware.
+
+### Lightbox
+
+- One `.dg-lb` element, built on the first card click and reused. The dim sits on the
+  **frame** (`rgba(var(--dg-lb-rgb), var(--dg-backdrop))`), not on a full-viewport
+  backdrop, so a lightbox smaller than the viewport leaves the page around it clear; at
+  `size=100` the frame covers everything. The backdrop stays a transparent
+  click-catcher — a click outside the frame closes.
+- Fixed-size frame (`X vw × X vh` from `data-size`, capped at the viewport); image
+  `object-fit: contain`, inset from the edge by `lightbox_padding`.
+- Left / right thirds are `<button>` nav zones with a chevron: dim by default, bright
+  on hover, greyed while `disabled` — the dead end when `data-loop="0"` (also
+  `aria-disabled`), mirroring the carousel. Zones hidden for a one-image gallery. The
+  middle third does nothing unless `middle=close`, which reveals a zone that closes and
+  shows a `zoom-out` cursor.
+- Closes on the ×, a click outside the frame, or `Esc`. `←` / `→` navigate. Focus moves
+  to × on open, is trapped in the dialog (`role="dialog"`, `aria-modal`), returns to
+  the opening card on close. `<html>` scroll is locked with scrollbar-width
+  compensation.
+- Incoming image preloaded (previous stays visible until ready), spinner + opacity dip
+  after 150 ms, both neighbours preloaded. 120 ms fade, none under
+  `prefers-reduced-motion`. ARIA labels via `Text::script()` / `Joomla.Text` with
+  English fallbacks.
+
+### Parameters
+
+`base_directory`, `image_extensions`, `sort_order`, `visible_cards`, `card_aspect`,
+`card_min`, `card_gap`, `lightbox_size`, `lightbox_color`, `lightbox_padding`,
+`lightbox_loop`, `middle_zone_action`, `backdrop_opacity` (fieldset `basic`), `debug`
+(fieldset `advanced`). Complete `en-GB` and `de-DE` language files. `card_gap` and
+`lightbox_padding` go through a CSS-length sanitiser (a bare `0` → `0px`, which a
+unitless zero would otherwise break in the card `calc()`; non-lengths → the fallback).
+`lightbox_color` is parsed from hex to an `r, g, b` triplet.
+
+### Assets & build
+
+- `media/plg_content_dinkygallery/{css,js}/` — Joomla's relative asset resolver only
+  finds files in those sub-folders. `joomla.asset.json` declares the style and the
+  module script; the plugin calls `getRegistry()->addExtensionRegistryFile()` before
+  `useStyle`/`useScript` (extension asset files are not auto-discovered) and only when a
+  carousel was actually emitted — exactly one CSS + one JS include per page.
+- `build.xml` Phing target `package` → `.releases/plg_content_dinkygallery-<x.y.z>.zip`
+  + `update.xml` with sha256/384/512, `<element>dinkygallery</element>` /
+  `<folder>content</folder>`, targetplatform 5.1–5.5 / 6.0–6.3, `php_minimum` 8.2.
+- GPLv3-or-later (`LICENSE` / `LICENSE.txt`, header in every PHP file).
 
 ### Known limitations
-- com_content builds RSS feed items straight from introtext/fulltext without
-  firing `onContentPrepare`, so `{gallery ...}` cannot be replaced in feeds
-  through this event. The `com_content.feed` context is handled if ever invoked,
-  but core does not invoke it. Article / category / featured / archive views
-  (all of the empulsiv target) are unaffected.
 
-### Added
-- Repository skeleton (Slice 1 — installable but inert):
-  - Extension manifest `dinkygallery.xml` (`type=plugin`, `group=content`,
-    `method=upgrade`, `<namespace path="src">`, `<media>` for the CSS/JS/asset
-    manifest, the parameter form in `basic` + `advanced` fieldsets, an
-    update server entry).
-  - DI service provider `services/provider.php` (registers `PluginInterface` as
-    `new DinkyGallery(Dispatcher, PluginHelper::getPlugin('content','dinkygallery'))`).
-  - `DinkyGallery` content-plugin class: subscribes to `onContentPrepare`
-    (`SubscriberInterface`), `$autoloadLanguage = true`. Handler body lands in
-    Slice 2.
-  - `media/plg_content_dinkygallery/`: `joomla.asset.json` declaring the style
-    (`plg_content_dinkygallery`) and module script; placeholder `dinkygallery.css`
-    and `dinkygallery.js`.
-  - Complete `en-GB` and `de-DE` language files (`.ini` + `.sys.ini`).
-  - `build.xml` Phing target `package`: builds
-    `.releases/plg_content_dinkygallery-<x.y.z>.zip` (version read from
-    `dinkygallery.xml`) and `.releases/update.xml` with sha256/384/512, plugin
-    update fields (`<element>dinkygallery</element>`, `<folder>content</folder>`),
-    targetplatform `5.1-5.5 / 6.0-6.3`, `php_minimum` 8.2. README / CHANGELOG /
-    Apache-named `LICENSE` excluded from the package; `LICENSE.txt` shipped.
-  - `LICENSE.txt` (GPLv3 copy for packaging) and `.gitignore` entries for
-    `LICENSE.txt` (un-ignore), `/.idea/`, `/.docker/`, `/.releases/`.
-  - `.doc/WORKPLAN.md` (phased build plan) alongside the requirements spec.
-  - `.docker/` local test stack (git-ignored): `joomla:5-apache` + `mariadb:11.4`
-    behind the shared Traefik proxy, `setup.sh` / `reset.sh`, generated spec §9
-    image matrix, five article fixtures (ids 101-105).
+- `com_content` builds RSS feed items straight from the article text without firing
+  `onContentPrepare`, so `{gallery …}` cannot be replaced in feeds. The
+  `com_content.feed` context is handled if ever dispatched, but core does not dispatch
+  it. Article / category / featured / archive views are unaffected.
+- No server-side thumbnails in v1 — cards load the full images (with intrinsic
+  `width`/`height`, so no layout shift). Thumbnail cache + `srcset` is a v1.1 candidate.
+
+### Deliberate deviations from the spec
+
+- Requirement 9 (frame transparent, whole viewport dimmed) → the dim sits on the frame;
+  a small lightbox leaves the page around it clear. Client decision after review.
+- `base_directory` is a `text` field, not `folder` — Joomla has no `folder` field type
+  and `folderlist` does not fit the root-relative path semantics.
+- `gap` added to the shortcode attributes for parity with the other visual settings.
+- GPLv3-or-later rather than GPLv2 (matches the repo `LICENSE` and DinkyTags).
