@@ -272,13 +272,12 @@ function showLightboxImage(i) {
         }
     });
 
-    if (!lbState.loop && n > 1) {
-        LB.prev.disabled = i <= 0;
-        LB.next.disabled = i >= n - 1;
-    } else {
-        LB.prev.disabled = false;
-        LB.next.disabled = false;
-    }
+    const atEnds = !lbState.loop && n > 1;
+
+    LB.prev.disabled = atEnds && i <= 0;
+    LB.next.disabled = atEnds && i >= n - 1;
+    LB.prev.setAttribute('aria-disabled', String(LB.prev.disabled));
+    LB.next.setAttribute('aria-disabled', String(LB.next.disabled));
 }
 
 /**

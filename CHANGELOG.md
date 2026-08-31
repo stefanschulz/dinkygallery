@@ -26,12 +26,15 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - fixed-size frame (`--dg-size` from `data-size`, `Xvw × Xvh`, capped at the
     viewport); the image is `object-fit: contain`, centred; empty frame area is
     a translucent dark mat, not a black bar.
-  - left / right thirds are real `<button>` nav zones; the middle third is a
-    no-op unless `data-middle="close"`, which reveals a `.dg-lb__zone--mid`
-    that closes and shows a `zoom-out` cursor (`!important` — the site
-    template's `[type="button"]` cursor rule loads later at equal specificity).
-    Zones hidden when a gallery has one image; the end zone is `disabled` at
-    the respective end when `data-loop="0"`, wraps otherwise.
+  - left / right thirds are real `<button>` nav zones, each with a chevron:
+    dim (`opacity: .55`) by default, bright on hover, greyed (`opacity: .2`)
+    when the zone is `disabled` — which happens at the respective end when
+    `data-loop="0"` (also `aria-disabled`), mirroring the carousel arrows;
+    the gallery wraps otherwise. Zones hidden when a gallery has one image.
+    The middle third is a no-op unless `data-middle="close"`, which reveals a
+    `.dg-lb__zone--mid` that closes and shows a `zoom-out` cursor
+    (`!important` — the site template's `[type="button"]` cursor rule loads
+    later at equal specificity).
   - close on the × (top-right of the frame), on a backdrop click outside the
     frame, or on `Esc`. `←` / `→` navigate. Focus moves to × on open, is
     trapped within the dialog while open (`role="dialog"`, `aria-modal`), and

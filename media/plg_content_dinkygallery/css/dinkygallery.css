@@ -288,7 +288,8 @@
     outline-offset: -6px;
 }
 
-/* Cosmetic: a faint chevron fades in on hover of the nav zones. */
+/* A chevron sits in each nav zone: dim by default, bright on hover, greyed out
+   at the respective end when the gallery does not loop (mirrors the carousel). */
 .dg-lb__zone--prev::before,
 .dg-lb__zone--next::before {
     content: "";
@@ -298,7 +299,8 @@
     height: 1rem;
     border: solid currentColor;
     border-width: 0 3px 3px 0;
-    opacity: 0;
+    opacity: 0.55;
+    filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.6));
     transition: opacity 0.2s ease;
 }
 
@@ -314,7 +316,12 @@
 
 .dg-lb__zone--prev:hover::before,
 .dg-lb__zone--next:hover::before {
-    opacity: 0.85;
+    opacity: 1;
+}
+
+/* Must come after :hover — equal specificity, last wins. */
+.dg-lb__zone:disabled::before {
+    opacity: 0.2;
 }
 
 .dg-lb__close {
@@ -392,7 +399,9 @@
     .dg-card__img,
     .dg-arrow,
     .dg-lb,
-    .dg-lb__img {
+    .dg-lb__img,
+    .dg-lb__zone--prev::before,
+    .dg-lb__zone--next::before {
         transition: none;
     }
 
