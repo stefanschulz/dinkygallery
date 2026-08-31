@@ -6,12 +6,13 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
-- **Position indicator.** A `1 / N` pill on the first carousel card (server-rendered,
-  shown only when a gallery has more than one image) as a gallery-size hint; a
-  `3 / 12` pill centred on the lightbox frame's bottom edge, updated on every
-  navigation; and a visually-hidden `role="status"` region that announces
-  "Image 3 of 12" (`PLG_CONTENT_DINKYGALLERY_ARIA_POSITION`, en-GB + de-DE) to
-  screen readers.
+- **Position indicator.** A centred `i / N` pill that rides the first visible
+  carousel card and shows that card's position (server-rendered as `1 / N` on the
+  first card for the no-JS baseline, then moved and updated by the script on
+  scroll; only when the gallery has more than one image); a `3 / 12` pill centred
+  on the lightbox frame's bottom edge, updated on every navigation; and a
+  visually-hidden `role="status"` region that announces "Image 3 of 12"
+  (`PLG_CONTENT_DINKYGALLERY_ARIA_POSITION`, en-GB + de-DE) to screen readers.
 - **Full-size preload on intent.** Pointing at or focusing a card warms its
   full-size image (`new Image()`, once per URL), so the lightbox opens instantly.
 

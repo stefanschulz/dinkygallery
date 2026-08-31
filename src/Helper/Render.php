@@ -64,9 +64,10 @@ final class Render
             $dims = ($img['w'] && $img['h']) ? ' data-w="' . (int) $img['w'] . '" data-h="' . (int) $img['h'] . '"' : '';
             $wh   = ($img['w'] && $img['h']) ? ' width="' . (int) $img['w'] . '" height="' . (int) $img['h'] . '"' : '';
 
-            // A "1 / N" count sits on the first card as a gallery-size hint.
+            // A "1 / N" count sits on the first card (no-JS baseline); the script
+            // then moves it onto the first *visible* card and updates the number.
             $count = ($i === 0 && $total > 1)
-                ? '<span class="dg-count" aria-hidden="true">1&#8202;/&#8202;' . $total . '</span>'
+                ? '<span class="dg-count" aria-hidden="true">1 / ' . $total . '</span>'
                 : '';
 
             $html .= '<li class="dg-card">'

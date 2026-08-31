@@ -42,16 +42,44 @@ function initCarousel(dg) {
         return card ? card.getBoundingClientRect().width + gap : track.clientWidth;
     };
 
+    // The "i / N" pill (server-rendered on the first card, absent for a one-image
+    // gallery) rides on the first visible card and shows that card's position.
+    const badge = dg.querySelector('.dg-count');
+    const cardCount = track.querySelectorAll('.dg-card').length;
+
+    const syncBadge = () => {
+        if (!badge) {
+            return;
+        }
+
+        const step = stepSize();
+        let index = step > 0 ? Math.round(track.scrollLeft / step) : 0;
+        index = Math.max(0, Math.min(cardCount - 1, index));
+
+        const link = track.querySelectorAll('.dg-card')[index].querySelector('.dg-card__link');
+
+        if (badge.parentElement !== link) {
+            link.appendChild(badge);
+        }
+
+        badge.textContent = (index + 1) + ' / ' + cardCount;
+    };
+
     let programmatic = false;
     let target = track.scrollLeft;
     let settleTimer = 0;
+
+    const sync = () => {
+        syncArrows();
+        syncBadge();
+    };
 
     const settle = () => {
         window.clearTimeout(settleTimer);
         settleTimer = window.setTimeout(() => {
             programmatic = false;
             target = track.scrollLeft;
-            syncArrows();
+            sync();
         }, 140);
     };
 
@@ -100,6 +128,10 @@ function initCarousel(dg) {
     prev.addEventListener('click', () => go(-1));
     next.addEventListener('click', () => go(1));
 
+    // Fires after any scroll settles (user or programmatic) — cheap safety net for
+    // the arrow state and the position pill.
+    track.addEventListener('scrollend', sync, { passive: true });
+
     let rafPending = false;
     track.addEventListener('scroll', () => {
         // A scroll we did not start (touch, wheel, scrollbar) re-anchors target.
@@ -111,7 +143,7 @@ function initCarousel(dg) {
             rafPending = true;
             requestAnimationFrame(() => {
                 rafPending = false;
-                syncArrows();
+                sync();
             });
         }
 
@@ -120,15 +152,15 @@ function initCarousel(dg) {
 
     window.addEventListener('resize', () => {
         target = track.scrollLeft;
-        syncArrows();
+        sync();
     }, { passive: true });
 
     // Fonts / images can change the track width after first paint.
     if (document.readyState !== 'complete') {
-        window.addEventListener('load', syncArrows, { once: true });
+        window.addEventListener('load', sync, { once: true });
     }
 
-    syncArrows();
+    sync();
 }
 
 /* ------------------------------------------------------------------ lightbox */

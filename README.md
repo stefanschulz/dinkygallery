@@ -85,7 +85,8 @@ preloaded (the previous one stays visible until it is ready), both neighbours ar
 preloaded, and a card's full image is warmed as soon as you point at it — navigation
 and opening are instant.
 
-The first carousel card carries a small `1 / N` badge as a gallery-size hint.
+A small `i / N` badge rides the first visible carousel card and shows its
+position (`1 / N` on the first card without JavaScript).
 
 **Without JavaScript** — the cards are plain links to the full images; the strip still
 scrolls. On a feed, `tmpl=component`, `print=1` or any non-HTML document, the gallery

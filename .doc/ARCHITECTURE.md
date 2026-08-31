@@ -163,7 +163,7 @@ files — **keep them stable**.
          data-w="4032" data-h="3024">
         <img class="dg-card__img" src="/images/…/01.jpg" alt="01"
              loading="lazy" decoding="async" width="4032" height="3024">
-        <span class="dg-count" aria-hidden="true">1 / 12</span>   <!-- first card only, N > 1 -->
+        <span class="dg-count" aria-hidden="true">1 / 12</span>   <!-- N > 1; script moves it -->
       </a>
     </li>
     …
@@ -173,8 +173,10 @@ files — **keep them stable**.
 ```
 
 `data-w`/`data-h` and the `<img>` `width`/`height` are omitted together when
-`getimagesize` failed. `.dg-count` is rendered only on the first card and only when
-the gallery has more than one image.
+`getimagesize` failed. `.dg-count` is rendered on the first card only when the
+gallery has more than one image; `initCarousel` then re-parents it onto the first
+visible card and rewrites the number as the strip scrolls (on `scroll`,
+`scrollend`, `resize` and after an arrow step).
 
 ### Carousel (CSS)
 
@@ -191,6 +193,9 @@ per click, wraps at the ends when `data-loop="1"` else `disabled`s the end arrow
 intended position is tracked in a `target` variable, **not** read back from
 `scrollLeft` (which lags during a smooth scroll, so rapid clicks would collapse onto
 one step); a 140 ms settle timer re-syncs the arrow state after the last scroll event.
+A `sync()` on every `scroll` / `scrollend` / `resize` also updates the `.dg-count`
+pill — it is moved onto the current first-visible card (`round(scrollLeft / step)`,
+clamped) and its number rewritten.
 
 ### Lightbox
 
