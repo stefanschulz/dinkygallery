@@ -715,3 +715,7 @@
 
 # --- build output ---
 /.releases/
+
+# --- design masters (.design/ keeps the exported logo.svg / mark.svg; the
+#     Affinity Designer sources next to them are local-only) ---
+/.design/*.af

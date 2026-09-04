@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- DinkyGallery logo. Rounded-square field (the one element shared across this
+     author's Joomla extensions, e.g. dinkymetrics/sitesnap; colour and pictogram are
+     otherwise free), a graphite field with a single brass framed photo - one image in
+     the lightbox - flanked by the two chevrons that are the viewer's previous / next
+     zones. See mark.svg for the reduced small-size version. -->
+<svg width="100%" height="100%" viewBox="0 0 1080 1080" version="1.1" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;">
+    <defs>
+        <clipPath id="frame">
+            <rect x="-45" y="-37" width="90" height="74" rx="12"/>
+        </clipPath>
+    </defs>
+    <g transform="translate(540,540) scale(5.4)">
+        <rect x="-90" y="-90" width="180" height="180" rx="34" style="fill:rgb(27,35,44);"/>
+        <rect x="-45" y="-37" width="90" height="74" rx="12" style="fill:rgb(224,161,61);"/>
+        <g clip-path="url(#frame)" style="fill:rgb(27,35,44);">
+            <circle cx="21" cy="-13" r="9"/>
+            <path d="M-52 41 L-15 -7 L5 14 L23 -11 L52 25 L52 41 Z"/>
+        </g>
+        <path d="M-61 -15 L-72 3 L-61 21" style="fill:none;stroke:rgb(224,161,61);stroke-width:6px;"/>
+        <path d="M61 -15 L72 3 L61 21" style="fill:none;stroke:rgb(224,161,61);stroke-width:6px;"/>
+    </g>
+</svg>
