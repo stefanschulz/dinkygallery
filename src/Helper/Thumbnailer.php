@@ -11,7 +11,9 @@
 
 namespace TheLoom\Plugin\Content\DinkyGallery\Helper;
 
+// phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
+// phpcs:enable PSR1.Files.SideEffects
 
 /**
  * Generates and caches width-scaled copies of an image next to the original, in a

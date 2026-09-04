@@ -1,0 +1,55 @@
+name: dinkygallery6-test
+
+# Throwaway Joomla 6 stack for the acceptance pass. The plugin is installed here
+# from the BUILT ZIP (.releases/plg_content_dinkygallery-<v>.zip), not symlinked,
+# so this also verifies the package manifest / <media> layout.
+# Routed by the shared Traefik proxy at http://dinkygallery6.localhost/
+
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpw
+      MARIADB_DATABASE: joomla
+      MARIADB_USER: joomla
+      MARIADB_PASSWORD: joomlapw
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - db-data:/var/lib/mysql
+    networks: [internal]
+
+  joomla:
+    image: joomla:6-apache
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      JOOMLA_DB_HOST: db
+      JOOMLA_DB_USER: joomla
+      JOOMLA_DB_PASSWORD: joomlapw
+      JOOMLA_DB_NAME: joomla
+    volumes:
+      - html-data:/var/www/html
+      - ..:/repo:ro
+    networks: [internal, dev-proxy]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=dev-proxy"
+      - "traefik.http.routers.dinkygallery6.rule=Host(`dinkygallery6.localhost`)"
+      - "traefik.http.routers.dinkygallery6.entrypoints=web"
+      - "traefik.http.services.dinkygallery6.loadbalancer.server.port=80"
+
+volumes:
+  db-data:
+  html-data:
+
+networks:
+  internal:
+  dev-proxy:
+    external: true

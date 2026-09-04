@@ -13,7 +13,9 @@ namespace TheLoom\Plugin\Content\DinkyGallery\Helper;
 
 use Joomla\CMS\Uri\Uri;
 
+// phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
+// phpcs:enable PSR1.Files.SideEffects
 
 /**
  * Resolves a gallery folder name to a validated absolute path and lists the images

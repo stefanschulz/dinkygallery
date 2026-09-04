@@ -13,6 +13,12 @@
         <property name="updatePath" value="${releaseFolder}/update.xml"/>
         <mkdir dir="${releaseFolder}"/>
         <delete file="${releasePath}" quiet="true"/>
+        <!--
+            Everything the installer needs and nothing else. Dot files / dot folders
+            (.doc, .docker, .design, .releases, .phpunit.cache, .git*) are dropped by
+            the two globs; the development tooling that lives at the repo root without a
+            leading dot is listed explicitly.
+        -->
         <zip destfile="${releasePath}">
             <fileset dir="." defaultexcludes="true">
                 <exclude name=".*"/>
@@ -21,6 +27,12 @@
                 <exclude name="CHANGELOG.md"/>
                 <exclude name="README.md"/>
                 <exclude name="LICENSE"/>
+                <exclude name="composer.json"/>
+                <exclude name="composer.lock"/>
+                <exclude name="vendor/**"/>
+                <exclude name="tests/**"/>
+                <exclude name="phpunit.xml.dist"/>
+                <exclude name="phpcs.xml.dist"/>
             </fileset>
         </zip>
         <filehash file="${releasePath}" hashtype="1" algorithm="sha256" propertyname="fh256"/>

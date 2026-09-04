@@ -1,0 +1,63 @@
+name: dinkygallery-test
+
+# Persistent local test/dev stack for plg_content_dinkygallery.
+# Routed by the shared Traefik proxy at http://dinkygallery.localhost/
+# (join dev-proxy network + labels; no host ports published).
+#
+# The working tree is mounted read-only at /repo and symlinked into
+# plugins/content/dinkygallery/ + media/plg_content_dinkygallery/ by setup.sh,
+# so edits in the working tree are live in the container (PHP opcache
+# revalidates within ~2s; CSS/JS are served straight from the symlink). Only
+# manifest (dinkygallery.xml) changes need a re-discover — see README.md.
+#
+# The whole repo is mounted (not just the plugin folders) so .docker/test.sh and
+# .docker/gallery.sh can reach vendor/, tests/ and the *.xml.dist configs.
+
+services:
+  db:
+    image: mariadb:11.4
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpw
+      MARIADB_DATABASE: joomla
+      MARIADB_USER: joomla
+      MARIADB_PASSWORD: joomlapw
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+    volumes:
+      - db-data:/var/lib/mysql
+    networks: [internal]
+
+  joomla:
+    image: joomla:5-apache
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      JOOMLA_DB_HOST: db
+      JOOMLA_DB_USER: joomla
+      JOOMLA_DB_PASSWORD: joomlapw
+      JOOMLA_DB_NAME: joomla
+    volumes:
+      - html-data:/var/www/html
+      - ..:/repo:ro
+    networks: [internal, dev-proxy]
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=dev-proxy"
+      - "traefik.http.routers.dinkygallery.rule=Host(`dinkygallery.localhost`)"
+      - "traefik.http.routers.dinkygallery.entrypoints=web"
+      - "traefik.http.services.dinkygallery.loadbalancer.server.port=80"
+
+volumes:
+  db-data:
+  html-data:
+
+networks:
+  internal:
+  dev-proxy:
+    external: true

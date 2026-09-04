@@ -20,7 +20,9 @@ use TheLoom\Plugin\Content\DinkyGallery\Helper\Render;
 use TheLoom\Plugin\Content\DinkyGallery\Helper\Shortcode;
 use TheLoom\Plugin\Content\DinkyGallery\Helper\Thumbnailer;
 
+// phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
+// phpcs:enable PSR1.Files.SideEffects
 
 /**
  * Replaces {gallery ...} shortcodes in com_content articles with an in-article card
@@ -297,7 +299,12 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
     /**
      * Reads the plugin parameters into resolved defaults.
      *
-     * @return  array{base_directory:string, extensions:string[], card_min:string, backdrop_opacity:int, lightbox_rgb:string, lightbox_padding:string, lightbox_aspect:string, thumbs_enabled:bool, thumb_dir:string, thumb_widths:list<int>, thumb_large:int, thumb_quality:int, thumb_prune:bool, options:array<string,mixed>}
+     * @return  array{
+     *     base_directory: string, extensions: string[], card_min: string, backdrop_opacity: int,
+     *     lightbox_rgb: string, lightbox_padding: string, lightbox_aspect: string,
+     *     thumbs_enabled: bool, thumb_dir: string, thumb_widths: list<int>, thumb_large: int,
+     *     thumb_quality: int, thumb_prune: bool, options: array<string, mixed>
+     * }
      *
      * @since   1.0.0
      */

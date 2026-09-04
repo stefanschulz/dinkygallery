@@ -11,7 +11,9 @@
 
 namespace TheLoom\Plugin\Content\DinkyGallery\Helper;
 
+// phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
+// phpcs:enable PSR1.Files.SideEffects
 
 /**
  * Builds the server-rendered markup for a gallery: the scroll-snap card carousel for
@@ -28,7 +30,10 @@ final class Render
      * Renders the in-article carousel.
      *
      * @param   list<array{url:string, src:string, srcset:string, full:string, alt:string, w:?int, h:?int}>  $images  Image list.
-     * @param   array{cards:mixed, size:mixed, loop:mixed, middle:mixed, gap:string, aspect:string, sizes:string, card_min:string, backdrop:int, lb_color:string, lb_pad:string, lb_aspect:string}  $o  Resolved options.
+     * @param   array{
+     *     cards: mixed, size: mixed, loop: mixed, middle: mixed, gap: string, aspect: string,
+     *     sizes: string, card_min: string, backdrop: int, lb_color: string, lb_pad: string, lb_aspect: string
+     * }  $o  Resolved options.
      * @param   array{carousel:string, prev:string, next:string}  $labels  Translated ARIA labels.
      *
      * @return  string

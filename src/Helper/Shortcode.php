@@ -11,7 +11,9 @@
 
 namespace TheLoom\Plugin\Content\DinkyGallery\Helper;
 
+// phpcs:disable PSR1.Files.SideEffects
 \defined('_JEXEC') or die;
+// phpcs:enable PSR1.Files.SideEffects
 
 /**
  * Finds {gallery ...} shortcodes in article text and parses their attributes.

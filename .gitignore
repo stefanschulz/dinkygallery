@@ -710,11 +710,13 @@
 # --- IDE project files (mirrors the DinkyTags repo) ---
 /.idea/
 
-# --- local Docker test stack (see .docker/README.md) ---
-/.docker/
-
 # --- build output ---
 /.releases/
+
+# --- dev tooling (composer.json is tracked; the rest is local) ---
+/vendor/
+/composer.lock
+/.phpunit.cache/
 
 # --- design masters (.design/ keeps the exported logo.svg / mark.svg; the
 #     Affinity Designer sources next to them are local-only) ---
