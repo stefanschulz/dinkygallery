@@ -17,6 +17,7 @@ use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\Event\SubscriberInterface;
 use TheLoom\Plugin\Content\DinkyGallery\Helper\Folder;
 use TheLoom\Plugin\Content\DinkyGallery\Helper\Render;
+use TheLoom\Plugin\Content\DinkyGallery\Helper\Sanitize;
 use TheLoom\Plugin\Content\DinkyGallery\Helper\Shortcode;
 use TheLoom\Plugin\Content\DinkyGallery\Helper\Thumbnailer;
 
@@ -232,8 +233,8 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
                 continue;
             }
 
-            $gap    = $this->cssLength((string) $options['gap']);
-            $aspect = $this->cssAspect((string) $options['aspect']);
+            $gap    = Sanitize::cssLength((string) $options['gap']);
+            $aspect = Sanitize::cssAspect((string) $options['aspect']);
             $cards  = max(1, (int) $options['cards']);
 
             $markup = $isHtml
@@ -316,15 +317,15 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
 
         return [
             'base_directory'   => $base !== '' ? $base : 'images',
-            'extensions'       => $this->extensionList((string) $params->get('image_extensions', 'jpg,jpeg,png,webp,gif,avif')),
+            'extensions'       => Sanitize::extensionList((string) $params->get('image_extensions', 'jpg,jpeg,png,webp,gif,avif')),
             'card_min'         => trim((string) $params->get('card_min', '13rem')) ?: '13rem',
             'backdrop_opacity' => (int) $params->get('backdrop_opacity', 60),
-            'lightbox_rgb'     => $this->hexToRgb((string) $params->get('lightbox_color', '#000000')),
-            'lightbox_padding' => $this->cssLength((string) $params->get('lightbox_padding', '10px'), '10px'),
-            'lightbox_aspect'  => $this->lightboxAspect((string) $params->get('lightbox_aspect', 'viewport')),
+            'lightbox_rgb'     => Sanitize::hexToRgb((string) $params->get('lightbox_color', '#000000')),
+            'lightbox_padding' => Sanitize::cssLength((string) $params->get('lightbox_padding', '10px'), '10px'),
+            'lightbox_aspect'  => Sanitize::lightboxAspect((string) $params->get('lightbox_aspect', 'viewport')),
             'thumbs_enabled'   => (int) $params->get('thumbnails', 1) === 1,
-            'thumb_dir'        => $this->thumbDirName((string) $params->get('thumb_dir', '.thumbs')),
-            'thumb_widths'     => $this->widthList((string) $params->get('thumb_widths', '480,768,1024,1600')),
+            'thumb_dir'        => Sanitize::thumbDirName((string) $params->get('thumb_dir', '.thumbs')),
+            'thumb_widths'     => Sanitize::widthList((string) $params->get('thumb_widths', '480,768,1024,1600')),
             'thumb_large'      => max(0, (int) $params->get('thumb_large', 1920)),
             'thumb_quality'    => min(100, max(1, (int) $params->get('thumb_quality', 82))),
             'thumb_prune'      => (int) $params->get('thumb_prune', 1) === 1,
@@ -339,173 +340,6 @@ final class DinkyGallery extends CMSPlugin implements SubscriberInterface
                 'aspect' => (string) $params->get('card_aspect', '4/3'),
             ],
         ];
-    }
-
-    /**
-     * Sanitises a card aspect ratio for the "--dg-aspect" custom property. Accepts
-     * "W/H", "W:H" (normalised to "/") or a bare number; anything else -> "4/3".
-     *
-     * @param   string  $raw  The parameter / shortcode value.
-     *
-     * @return  string
-     *
-     * @since   1.3.0
-     */
-    private function cssAspect(string $raw): string
-    {
-        $raw = str_replace(':', '/', trim($raw));
-
-        return preg_match('#^\d*\.?\d+(\s*/\s*\d*\.?\d+)?$#', $raw) === 1 ? $raw : '4/3';
-    }
-
-    /**
-     * Resolves the lightbox_aspect parameter to "viewport", "image" or a sanitised
-     * "W/H" ratio. Anything unrecognised -> "viewport" (today's behaviour).
-     *
-     * @param   string  $raw  The parameter value.
-     *
-     * @return  string
-     *
-     * @since   1.4.0
-     */
-    private function lightboxAspect(string $raw): string
-    {
-        $raw = strtolower(str_replace(':', '/', trim($raw)));
-
-        if ($raw === 'image') {
-            return 'image';
-        }
-
-        return preg_match('#^\d*\.?\d+(\s*/\s*\d*\.?\d+)?$#', $raw) === 1 ? $raw : 'viewport';
-    }
-
-    /**
-     * Sanitises a user-supplied CSS length before it goes into a style attribute.
-     * Anything that is not "0" or a number with a length unit becomes "0", so the
-     * value cannot break out of the custom-property declaration.
-     *
-     * @param   string  $raw  The raw parameter / shortcode value.
-     *
-     * @return  string
-     *
-     * @since   1.0.0
-     */
-    private function cssLength(string $raw, string $fallback = '0px'): string
-    {
-        $raw = trim($raw);
-
-        if ($raw === '') {
-            return $fallback;
-        }
-
-        // "0" goes out as "0px": a unitless zero makes "100% - (n-1)*var(--dg-gap)"
-        // an invalid calc() (percentage minus number) and the sizing collapses.
-        if ($raw === '0') {
-            return '0px';
-        }
-
-        return preg_match('/^\d*\.?\d+(px|rem|em|%|vw|vh|vmin|vmax|ch)$/', $raw) === 1 ? $raw : $fallback;
-    }
-
-    /**
-     * Converts a "#rgb" / "#rrggbb" colour to a "r, g, b" triplet for use inside
-     * rgba(). Falls back to black on anything unparseable.
-     *
-     * @param   string  $hex  The colour value from the color field.
-     *
-     * @return  string
-     *
-     * @since   1.0.0
-     */
-    private function hexToRgb(string $hex): string
-    {
-        $hex = ltrim(trim($hex), '#');
-
-        if (preg_match('/^[0-9a-fA-F]{3}$/', $hex)) {
-            $hex = $hex[0] . $hex[0] . $hex[1] . $hex[1] . $hex[2] . $hex[2];
-        }
-
-        if (!preg_match('/^[0-9a-fA-F]{6}$/', $hex)) {
-            return '0, 0, 0';
-        }
-
-        return hexdec(substr($hex, 0, 2)) . ', ' . hexdec(substr($hex, 2, 2)) . ', ' . hexdec(substr($hex, 4, 2));
-    }
-
-    /**
-     * Sanitises the thumb_dir parameter to a single, safe path segment. Slashes, "..",
-     * a leading dot-dot or an empty value fall back to ".thumbs".
-     *
-     * @param   string  $raw  The thumb_dir parameter value.
-     *
-     * @return  string
-     *
-     * @since   1.5.0
-     */
-    private function thumbDirName(string $raw): string
-    {
-        $name = trim(str_replace('\\', '/', $raw), " \t/");
-
-        if ($name === '' || str_contains($name, '/') || str_contains($name, '..')) {
-            return '.thumbs';
-        }
-
-        return $name;
-    }
-
-    /**
-     * Parses the thumb_widths list into a sorted, de-duplicated array of pixel widths
-     * (1-10000). Empty / all-invalid input falls back to the default ladder.
-     *
-     * @param   string  $raw  The thumb_widths parameter value.
-     *
-     * @return  list<int>
-     *
-     * @since   1.5.0
-     */
-    private function widthList(string $raw): array
-    {
-        $out = [];
-
-        foreach (explode(',', $raw) as $token) {
-            $n = (int) trim($token);
-
-            if ($n >= 1 && $n <= 10000) {
-                $out[$n] = $n;
-            }
-        }
-
-        if ($out === []) {
-            return [480, 768, 1024, 1600];
-        }
-
-        ksort($out);
-
-        return array_values($out);
-    }
-
-    /**
-     * Splits a comma list of extensions into a clean lower-case array.
-     *
-     * @param   string  $raw  The image_extensions parameter value.
-     *
-     * @return  string[]
-     *
-     * @since   1.0.0
-     */
-    private function extensionList(string $raw): array
-    {
-        $list = [];
-
-        foreach (explode(',', strtolower($raw)) as $ext) {
-            $ext = trim($ext, " \t\n.");
-
-            if ($ext !== '') {
-                $list[] = $ext;
-            }
-        }
-
-        return $list !== [] ? $list : ['jpg', 'jpeg', 'png', 'webp', 'gif', 'avif'];
     }
 
     /**
