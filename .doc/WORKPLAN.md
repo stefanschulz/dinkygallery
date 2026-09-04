@@ -26,6 +26,7 @@ Sprachdatei-Disziplin, `.docker/`-Teststack, Doku im Stil von
 | Lightbox-Optik (Anf. 9) | **„nur die Lightbox abgedunkelt"** — die Dimmung sitzt auf dem Frame (`background: rgba(0,0,0,var(--dg-backdrop))`), der Backdrop ist nur transparenter Klickfänger. Ist der Frame kleiner als der Viewport, bleibt die Seite ringsum klar; bei `size=100` deckt der Frame alles → wie vorher. Klick außerhalb schließt (`cursor: zoom-out`). | Spec §5.1 Design-Check. Erst „ganzer Viewport" (2026-08-30), auf Nutzerwunsch umgekehrt (2026-08-30, nach Slice 4) |
 | `{gallery}` in `<code>`/`<pre>` | Best-Effort-Skip wird **umgesetzt** (nicht auf v1.1 verschoben) | Spec §3 erlaubt Verschiebung, aber der Aufwand ist gering; entschieden 2026-08-30 |
 | `base_directory`-Feldtyp | **`type="text"`** mit `hint="images"`, Default `images` | Joomla hat keinen `folder`-Feldtyp (nur `folderlist`, das rekursiv die *gesamte* Installation listet bzw. bei `directory="images"` die Pfad-Semantik bricht). Einmalige Einstellung, Validierung in `Helper/Folder`. Entschieden 2026-08-30 |
+| Tests | `composer.json` **nur** `require-dev` (`phpunit`, `php_codesniffer`); Unit-Tests für die reinen Helfer (`Sanitize`, `Shortcode`, `Render`, `Thumbnailer`, `Folder::resolve`), Integrationsskript `tests/Integration/gallery.php` über die `.docker`-Fixtures statt Mocks; kein CI. Angleichung an DinkyMetrics — voller Plan in [TEST-PLAN.md](TEST-PLAN.md) | entschieden 2026-09-04 |
 
 ---
 

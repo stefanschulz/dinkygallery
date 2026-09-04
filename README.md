@@ -20,13 +20,22 @@ Install → Extensions**, then enable **Content - DinkyGallery** under **System 
 Plugins**. Set `base_directory` to the folder your gallery folders live under
 (default `images`). That is the whole setup.
 
-To build the zip from source you need [Phing](https://www.phing.info/):
+## Build & test
+
+Development tooling only — the plugin ships with no runtime dependencies.
 
 ```bash
-phing package
+composer install               # phpcs + phpunit (dev only)
+composer run lint               # PSR-12, the way the Joomla CMS lints itself
+composer run test               # unit tests on this machine
+.docker/test.sh                 # the same tests on a PHP that has GD + WebP — the run that counts
+.docker/gallery.sh              # folder listing, thumbnail cache and a full render against the fixtures
+phing package                   # build .releases/plg_content_dinkygallery-<version>.zip + update.xml
 ```
 
-The zip and a matching `update.xml` land in `.releases/`.
+`composer run test` on a host without GD skips the `Thumbnailer` cases; `.docker/test.sh`
+runs them. The zip and a matching `update.xml` land in `.releases/`. A disposable Joomla
+stack for testing lives in `.docker/` — see `.docker/README.md`.
 
 ## Shortcode
 

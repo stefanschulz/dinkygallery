@@ -3,6 +3,27 @@
 All notable changes to `plg_content_dinkygallery` are documented here.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+- **Test suite**, aligned with the DinkyMetrics setup — nothing user-facing.
+  - `composer.json` (dev-only), `phpunit.xml.dist`, `phpcs.xml.dist`,
+    `tests/bootstrap.php`; `composer run lint` / `composer run test`.
+  - `src/Helper/Sanitize.php` — the seven pure parameter / shortcode
+    sanitisers, moved out of `DinkyGallery` as `public static` so they can be
+    unit tested. Behaviour unchanged.
+  - `tests/Unit/` — `Sanitize`, `Shortcode`, `Render`, `Thumbnailer`
+    (`#[RequiresPhpExtension('gd')]`), `Folder::resolve()`. 119 tests.
+  - `tests/Integration/gallery.php` + `.docker/gallery.sh` — the folder
+    listing, the `.thumbs` cache and a full render checked against the
+    fixtures, no mocks. `.docker/test.sh` runs the unit suite on a PHP with
+    GD + WebP.
+  - `.docker/` is now tracked (throwaway local credentials only), and mounts
+    the whole repo at `/repo` so the runners reach `vendor/` and `tests/`.
+  - Every `src/` file wraps its `_JEXEC` guard in
+    `phpcs:disable PSR1.Files.SideEffects`; two long `@param` docblocks wrapped.
+    `phpcs` is clean.
+
 ## [1.5.0] - 2026-08-31
 
 ### Added

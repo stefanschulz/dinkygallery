@@ -61,29 +61,33 @@ The working tree is mounted read-only at `/repo`; `setup.sh` symlinks
 
 ## Fixtures
 
-`setup.sh` generates the spec section 9 image matrix under `images/`:
+`setup.sh` generates an image matrix under `images/` (all solid-colour placeholders):
 
 | folder | contents |
 |---|---|
-| `gallery-01` | 1 landscape image |
-| `gallery-02` | 1 landscape + 1 portrait |
-| `gallery-12` | landscape / portrait / square / 120×90 tiny / 6000×4000 huge / assorted + a `notes.txt` (must be skipped) |
+| `gallery-01` | 1 landscape (1600×1000) |
+| `gallery-02` | 1 landscape + 1 portrait (1000×1500) |
+| `gallery-05` | 5 landscapes |
+| `gallery-portrait` | 6 portraits |
+| `gallery-12` | 12 mixed — landscape / portrait / `03-square.png` / `04-tiny.png` 120×90 / `05-huge.jpg` 6000×4000 / `06-wide` 2400×900 / `07-tall` 900×2400 / `08-mid.webp` / png / jpg — plus a `notes.txt` that must be skipped |
 
-`fixtures.sql` seeds five articles (ids 101–105) and enables the plugin with
-`debug=1`, `base_directory=images`. Re-runnable (`INSERT IGNORE` / idempotent `UPDATE`).
+`fixtures.sql` enables the plugin (`debug=1`, `base_directory=images`, rest = manifest
+defaults) and seeds articles + one module. Re-runnable (`INSERT IGNORE` / idempotent
+`UPDATE`).
 
-| id | shortcode(s) | checks |
+| id | what | checks |
 |---|---|---|
 | 101 | `{gallery gallery-12}` | bare form, 12 cards, default params |
 | 102 | `{gallery folder="gallery-02" cards="2" size="80"}` | attribute form |
 | 103 | `{gallery gallery-01}` + `{gallery folder="gallery-12" size="40" middle="close" loop="0"}` | two independent galleries |
 | 104 | `{gallery missing-folder}` + `{gallery ../escape}` | both render nothing + debug reason |
 | 105 | `{gallery gallery-12}` inside `<pre>` + `{gallery gallery-02}` | code-block skip |
+| 110 | **"DinkyGallery Test Page"** (`/dinkygallery-test`) — 15 labelled cases: defaults, `cards=5`, small centred `middle=close`, `loop=0`, single image, portrait series, `sort=desc`, two in one paragraph, `gap=16px`, sigplus closing-tag form (folder / ignored legacy attrs / leading slash / single file), `aspect=16/9`, `aspect=1:1` | the manual test surface + what `tests/Integration/gallery.php` Part B fetches |
+| mod 900 | Custom HTML module `{gallery gallery-02}`, *Prepare Content* on, sidebar | `mod_custom.content` context |
 
 Quick check:
 
 ```bash
-curl -s -H 'Host: dinkygallery.localhost' \
-  'http://127.0.0.1/index.php?option=com_content&view=article&id=101' \
-  | grep -E 'dg-track|dg-card|DinkyGallery:'
+curl -s -H 'Host: dinkygallery.localhost' http://localhost/dinkygallery-test \
+  | grep -oE 'dg-track|dg-card__img|DinkyGallery:'
 ```

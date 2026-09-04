@@ -4,7 +4,8 @@ Angleichung der Testabdeckung an das Schwesterprojekt **DinkyMetrics**
 (`P:\dev\dinkymetrics`). Vorlage sind dessen `composer.json`, `phpunit.xml.dist`,
 `phpcs.xml.dist`, `tests/` und `.docker/*.sh`.
 
-**Status**: in Umsetzung — begonnen 2026-09-04
+**Status**: umgesetzt 2026-09-04 — Phasen 1–4 + 6 erledigt, Phase 5 (optional) offen.
+119 Unit-Tests grün (`.docker/test.sh`, 206 Assertions), `gallery.sh` 28/28, `phpcs` sauber.
 **Bezug**: [WORKPLAN.md](WORKPLAN.md) · [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ---
@@ -33,41 +34,41 @@ Nur `Folder` braucht die Laufzeit (`Uri::root()`).
 
 ### Phase 1 — Infrastruktur
 
-- [ ] `composer.json` — `require-dev`: `phpunit/phpunit ^11.5 || ^12.0`,
+- [x] `composer.json` — `require-dev`: `phpunit/phpunit ^11.5 || ^12.0`,
   `squizlabs/php_codesniffer ^3.10`,
   `dealerdirect/phpcodesniffer-composer-installer ^1.0`.
   `autoload-dev` PSR-4: `TheLoom\Plugin\Content\DinkyGallery\` → `src/`,
   `TheLoom\Plugin\Content\DinkyGallery\Tests\` → `tests/Unit/`.
   `scripts`: `lint` = `phpcs`, `test` = `phpunit`.
-- [ ] `phpunit.xml.dist` — Bootstrap `tests/bootstrap.php`,
+- [x] `phpunit.xml.dist` — Bootstrap `tests/bootstrap.php`,
   `cacheDirectory=".phpunit.cache"`, `failOnWarning`/`failOnRisky` = true,
   Suite `Unit` → `tests/Unit`.
-- [ ] `phpcs.xml.dist` — von DinkyMetrics übernommen, `name="DinkyGallery"`,
+- [x] `phpcs.xml.dist` — von DinkyMetrics übernommen, `name="DinkyGallery"`,
   Excludes `vendor` / `.docker` / `.releases` / `.idea`.
-- [ ] `tests/bootstrap.php` — `\defined('_JEXEC') or \define('_JEXEC', 1);` +
+- [x] `tests/bootstrap.php` — `\defined('_JEXEC') or \define('_JEXEC', 1);` +
   `require vendor/autoload.php` (mit `phpcs:disable PSR1.Files.SideEffects`).
-- [ ] `.gitignore` — `/vendor`, `/composer.lock`, `/.phpunit.cache` ergänzen
+- [x] `.gitignore` — `/vendor`, `/composer.lock`, `/.phpunit.cache` ergänzen
   (fehlen hier, anders als bei DinkyMetrics).
-- [ ] `build.xml` — Excludes für `composer.json`, `composer.lock`, `vendor/**`,
+- [x] `build.xml` — Excludes für `composer.json`, `composer.lock`, `vendor/**`,
   `tests/**`, `phpunit.xml.dist`, `phpcs.xml.dist`; danach ZIP-Inhalt prüfen
   (null Treffer auf `composer|phpunit|phpcs|tests/|vendor`).
-- [ ] `.docker/test.sh` — PHPUnit **im J5-Container** (`dinkygallery-test-joomla-1`),
+- [x] `.docker/test.sh` — PHPUnit **im J5-Container** (`dinkygallery-test-joomla-1`),
   Cache nach `/tmp`. Grund: die `Thumbnailer`-Tests brauchen **GD/WebP**, die das
   Host-PHP oft nicht hat (bei DinkyMetrics ist es `intl`).
-- [ ] `.docker/gallery.sh` — `tests/Integration/gallery.php` im Container.
+- [x] `.docker/gallery.sh` — `tests/Integration/gallery.php` im Container.
 
 **Ende der Phase:** `composer install`, `composer run lint` (grün oder nur
 Warnungen), `composer run test` (leer/grün), `phing package` unverändert, ZIP sauber.
 
 ### Phase 2 — Refactor für Testbarkeit
 
-- [ ] Die reinen Sanitizer aus `DinkyGallery` nach `src/Helper/Sanitize.php`
+- [x] Die reinen Sanitizer aus `DinkyGallery` nach `src/Helper/Sanitize.php`
   auslagern, als `public static` (analog `Formatter::normaliseLocale`):
   `cssAspect`, `lightboxAspect`, `cssLength`, `hexToRgb`, `extensionList`,
   `thumbDirName`, `widthList`. `DinkyGallery::config()` ruft `Sanitize::*` auf.
   Begründung: Sicherheitslast (Style-Attribut-Breakout, Pfad-Traversal) und
   genau die „reine Logik", die DinkyMetrics unit-testet.
-- [ ] Rauchtest im Stack, dass Rendern unverändert funktioniert.
+- [x] Rauchtest im Stack, dass Rendern unverändert funktioniert.
 
 ### Phase 3 — `tests/Unit/`
 
@@ -84,14 +85,14 @@ Warnungen), `composer run test` (leer/grün), `phing package` unverändert, ZIP 
 Analog zu DinkyMetrics' `counts.php`: einfaches Skript, **ohne Mocks**, im Stack,
 eigener `spl_autoload_register` für den `src/`-Prefix.
 
-- [ ] Teil A — `Folder::images()`/`single()` end-to-end gegen einen Fixture-Bildbaum:
+- [x] Teil A — `Folder::images()`/`single()` end-to-end gegen einen Fixture-Bildbaum:
   Anzahl, Natursortierung asc/desc, `notes.txt` + Dotfiles übersprungen,
   URL-Encoding, `.thumbs` erzeugt und (nur `images()`) gepruned.
-- [ ] Teil B — HTTP-Render-Check: `curl` des Fixture-Artikels aus
+- [x] Teil B — HTTP-Render-Check: `curl` des Fixture-Artikels aus
   `.docker/fixtures.sql` im Container, Assertions auf das HTML — N × `.dg`,
   `srcset` korrekt, `thumbs: N made`-Zeile, Debug-Kommentar vorhanden, keine
   PHP-Notice. Formalisiert den bisher manuellen Rauchtest zu pass/fail.
-- [ ] `ok/FAIL`-Ausgabe, Exit ≠ 0 bei Fehler (wie `counts.php`).
+- [x] `ok/FAIL`-Ausgabe, Exit ≠ 0 bei Fehler (wie `counts.php`).
 
 ### Phase 5 — optional: Markup-Vertrag
 
@@ -102,10 +103,10 @@ eigener `spl_autoload_register` für den `src/`-Prefix.
 
 ### Phase 6 — Abschluss
 
-- [ ] `phpcs` gegen `src/` grün (erwartet gering — Code ist im Joomla-Stil).
-- [ ] README „Build & Test"-Block wie DinkyMetrics; `ARCHITECTURE.md` →
+- [x] `phpcs` gegen `src/` grün (erwartet gering — Code ist im Joomla-Stil).
+- [x] README „Build & Test"-Block wie DinkyMetrics; `ARCHITECTURE.md` →
   `## Testing`; Entscheidungszeile in `WORKPLAN.md`; `CHANGELOG`-Eintrag.
-- [ ] Schrittweise Commits. **Push durch den Maintainer.**
+- [ ] Push durch den Maintainer
 
 ---
 
