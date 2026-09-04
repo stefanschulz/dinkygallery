@@ -443,6 +443,12 @@ A drives `Folder` + `Thumbnailer` against `images/gallery-*`; Part B fetches the
 article over HTTP and asserts on the markup. The analogue of DinkyMetrics'
 `tests/Integration/counts.php`.
 
+**Contract** (`tests/parity/contract.mjs`, `node`, no deps) — the `dg-*` class names,
+the `--dg-*` custom properties and the `data-*` attributes on `.dg` must line up
+across `Render.php`, `dinkygallery.css` and `dinkygallery.js`. Rename one in a single
+file and a card silently loses its styling or the lightbox stops sizing; this catches
+it. DinkyMetrics pins its number formatting the same way.
+
 **Lint** — `composer run lint` = `phpcs` against PSR-12 (line length 160 is a warning,
 not an error). 0 / 0 expected.
 

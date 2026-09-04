@@ -30,6 +30,7 @@ composer run lint               # PSR-12, the way the Joomla CMS lints itself
 composer run test               # unit tests on this machine
 .docker/test.sh                 # the same tests on a PHP that has GD + WebP — the run that counts
 .docker/gallery.sh              # folder listing, thumbnail cache and a full render against the fixtures
+node tests/parity/contract.mjs  # the dg-* class / --dg-* property / data-* names agree across PHP, CSS and JS
 phing package                   # build .releases/plg_content_dinkygallery-<version>.zip + update.xml
 ```
 

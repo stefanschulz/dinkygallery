@@ -4,8 +4,9 @@ Angleichung der Testabdeckung an das Schwesterprojekt **DinkyMetrics**
 (`P:\dev\dinkymetrics`). Vorlage sind dessen `composer.json`, `phpunit.xml.dist`,
 `phpcs.xml.dist`, `tests/` und `.docker/*.sh`.
 
-**Status**: umgesetzt 2026-09-04 — Phasen 1–4 + 6 erledigt, Phase 5 (optional) offen.
-119 Unit-Tests grün (`.docker/test.sh`, 206 Assertions), `gallery.sh` 28/28, `phpcs` sauber.
+**Status**: umgesetzt 2026-09-04 — Phasen 1–6 erledigt.
+119 Unit-Tests grün (`.docker/test.sh`, 206 Assertions), `gallery.sh` 28/28,
+`contract.mjs` 4/4, `phpcs` sauber.
 **Bezug**: [WORKPLAN.md](WORKPLAN.md) · [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ---
@@ -94,12 +95,14 @@ eigener `spl_autoload_register` für den `src/`-Prefix.
   PHP-Notice. Formalisiert den bisher manuellen Rauchtest zu pass/fail.
 - [x] `ok/FAIL`-Ausgabe, Exit ≠ 0 bei Fehler (wie `counts.php`).
 
-### Phase 5 — optional: Markup-Vertrag
+### Phase 5 — Markup-Vertrag
 
-- [ ] `tests/parity/contract.mjs` (oder PHP-Test): durchsucht `Render.php`,
-  `dinkygallery.css`, `dinkygallery.js` nach dem vereinbarten Token-Satz
-  (Klassennamen + `data-*`) und meldet, wenn eine Datei aus der Reihe tanzt.
-  Pendant zu DinkyMetrics' Zahlenformat-Parität; nice-to-have.
+- [x] `tests/parity/contract.mjs` (`node`, ohne Abhängigkeiten): vergleicht die
+  `dg-*`-Klassen, die `--dg-*`-Custom-Properties und die `data-*`-Übergabe
+  zwischen `Render.php`, `dinkygallery.css` und `dinkygallery.js` und meldet,
+  wenn eine Datei aus der Reihe tanzt. Negativ getestet (Klassen-Rename in
+  `Render.php`, entfernter `dataset`-Zugriff in JS → beide erkannt). Pendant zu
+  DinkyMetrics' Zahlenformat-Parität.
 
 ### Phase 6 — Abschluss
 

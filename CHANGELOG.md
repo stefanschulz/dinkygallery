@@ -18,6 +18,9 @@ This project adheres to [Semantic Versioning](https://semver.org/).
     listing, the `.thumbs` cache and a full render checked against the
     fixtures, no mocks. `.docker/test.sh` runs the unit suite on a PHP with
     GD + WebP.
+  - `tests/parity/contract.mjs` (`node`) — the `dg-*` class names, `--dg-*`
+    custom properties and `data-*` attributes stay in sync across
+    `Render.php`, `dinkygallery.css` and `dinkygallery.js`.
   - `.docker/` is now tracked (throwaway local credentials only), and mounts
     the whole repo at `/repo` so the runners reach `vendor/` and `tests/`.
   - Every `src/` file wraps its `_JEXEC` guard in
