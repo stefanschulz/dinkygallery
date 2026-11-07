@@ -34,6 +34,10 @@ node tests/parity/contract.mjs  # the dg-* class / --dg-* property / data-* name
 phing package                   # build .releases/plg_content_dinkygallery-<version>.zip + update.xml
 ```
 
+GitHub Actions runs these checks on pushes to `main`, pull requests and release tags.
+The CI also installs the built package into disposable Joomla 5 and 6 instances and
+runs the gallery integration checks against both.
+
 `composer run test` on a host without GD skips the `Thumbnailer` cases; `.docker/test.sh`
 runs them. The zip and a matching `update.xml` land in `.releases/`. A disposable Joomla
 stack for testing lives in `.docker/` — see `.docker/README.md`.

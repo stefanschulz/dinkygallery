@@ -196,10 +196,10 @@ $check(
 
 echo "\nPart B — full render of the test article over HTTP\n\n";
 
-// curl, not the HTTP stream wrapper: SEF is on, so index.php?...id=110 answers 301
-// and the wrapper does not follow it. Hit the alias directly.
+// curl, not the HTTP stream wrapper: depending on Joomla's SEF setting the article
+// URL may redirect to its menu alias. Follow that redirect in either configuration.
 $html = shell_exec(
-    'curl -s -H "Host: dinkygallery.localhost" http://localhost/dinkygallery-test 2>/dev/null'
+    'curl -s -L -H "Host: dinkygallery.localhost" "http://localhost/index.php?option=com_content&view=article&id=110" 2>/dev/null'
 );
 
 if ($html === null || $html === '' || $html === false) {
