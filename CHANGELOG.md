@@ -5,8 +5,16 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-11-07
+
+### Added
+- **GitHub Actions CI and release workflows.** Pull requests and pushes to `main`
+  run the quality checks and install the built extension into disposable Joomla 5
+  and 6 instances. Pushing a matching `vX.Y.Z` tag publishes the verified package.
+
 ### Changed
-- **Test suite**, aligned with the DinkyMetrics setup — nothing user-facing.
+- **Test suite and development tooling**, aligned with the DinkyMetrics setup — no
+  user-facing runtime change.
   - `composer.json` (dev-only), `phpunit.xml.dist`, `phpcs.xml.dist`,
     `tests/bootstrap.php`; `composer run lint` / `composer run test`.
   - `src/Helper/Sanitize.php` — the seven pure parameter / shortcode
@@ -26,6 +34,8 @@ This project adheres to [Semantic Versioning](https://semver.org/).
   - Every `src/` file wraps its `_JEXEC` guard in
     `phpcs:disable PSR1.Files.SideEffects`; two long `@param` docblocks wrapped.
     `phpcs` is clean.
+- The CI fixture setup now executes generated image fixtures as PHP; the integration
+  check reports missing fixture files directly instead of stopping on a type error.
 
 ## [1.5.0] - 2026-08-31
 
