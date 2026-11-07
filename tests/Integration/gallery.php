@@ -87,11 +87,24 @@ $folder = new Folder('images', $exts, $thumb, [480, 768, 1024, 1600], 1920, true
 // --- resolve() -----------------------------------------------------------------
 $g12 = $folder->resolve('gallery-12');
 $check('resolve("gallery-12") -> a directory', $g12 !== null && is_dir($g12), $folder->getError());
+
+if ($g12 === null) {
+    fwrite(STDERR, "Cannot continue fixture-dependent checks: images/gallery-12 is missing.\n");
+
+    exit(1);
+}
+
 $check('resolve("../escape") -> null', $folder->resolve('../escape') === null);
 $check('resolve("missing-folder") -> null', $folder->resolve('missing-folder') === null);
 
 $single = $folder->resolve('gallery-12/05-huge.jpg');
 $check('resolve("gallery-12/05-huge.jpg") -> the file', $single !== null && is_file($single), $folder->getError());
+
+if ($single === null) {
+    fwrite(STDERR, "Cannot continue single-image checks: images/gallery-12/05-huge.jpg is missing.\n");
+
+    exit(1);
+}
 
 // --- images() listing --------------------------------------------------------
 $asc = $folder->images($g12, 'images/gallery-12', 'asc');

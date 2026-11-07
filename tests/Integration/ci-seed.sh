@@ -9,7 +9,7 @@ BASE_URL="http://127.0.0.1:${PORT}"
 COMPOSE=(docker compose -f tests/Integration/compose.yml)
 J() { "${COMPOSE[@]}" exec -T joomla sh -c "$1"; }
 
-VERSION="$(php -r '$xml = simplexml_load_file("dinkygallery.xml"); if (!$xml) { exit(1); } echo (string) $xml->version;')"
+VERSION="${VERSION:-$(php -r '$xml = simplexml_load_file("dinkygallery.xml"); if (!$xml) { exit(1); } echo (string) $xml->version;')}"
 PACKAGE=".releases/plg_content_dinkygallery-${VERSION}.zip"
 [[ -f "$PACKAGE" ]] || { echo "Expected package ZIP: $PACKAGE" >&2; exit 1; }
 PACKAGE_NAME="$(basename "$PACKAGE")"
@@ -35,6 +35,7 @@ J 'chown -R www-data:www-data /var/www/html/cache /var/www/html/administrator/ca
 
 echo "Generating deterministic test images..."
 "${COMPOSE[@]}" exec -T joomla sh -c 'cd /var/www/html && php -d memory_limit=512M' <<'PHP'
+<?php
 function makeImage($path, $width, $height) {
   if (is_file($path)) return;
   @mkdir(dirname($path), 0755, true);
